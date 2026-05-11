@@ -53,6 +53,15 @@ Files are stored in private Supabase Storage buckets — never publicly accessib
 - `originals/` — full resolution, preserved exactly as uploaded
 - `thumbnails/` — compressed WebP previews for gallery grid, generated on upload via a Supabase Edge Function or Next.js API route
 
+### UI: Tailwind CSS v4 + HeroUI Component Library
+
+Tailwind CSS v4 provides utility-first styling. HeroUI (v3 beta) provides an accessible, React Aria-based component library built on Tailwind v4. Together they cover layout, forms, modals, and data display without writing bespoke CSS.
+
+- Tailwind v4 (CSS-first config, no `tailwind.config.js`)
+- HeroUI v3 beta — compound-component pattern (`Card.Header`, `Card.Content`, etc.), built on React Aria, React 19+ compatible
+
+_Alternative considered: shadcn/ui_ — good but requires Tailwind v3 and more per-component copy/paste maintenance.
+
 ### Tagging: Structured Categories, Not Free-form
 
 Tags belong to categories (place, event, topic, format). This enables faceted search UI with meaningful filter dimensions. Tags are shared across all items (not per-user) so family members build a consistent vocabulary over time.

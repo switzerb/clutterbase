@@ -5,7 +5,9 @@
 - [ ] 1.3 Connect Vercel project to GitHub repository for CI/CD
 - [ ] 1.4 Configure Supabase project (enable Auth, Storage, and database)
 - [ ] 1.5 Add environment variables to Vercel and local .env.local (Supabase URL, anon key, service role key)
-- [ ] 1.6 Install and configure Supabase client libraries (@supabase/supabase-js, @supabase/ssr)
+  - [ ] 1.6 Install and configure Supabase client libraries (@supabase/supabase-js, @supabase/ssr)
+- [ ] 1.7 Install and configure Tailwind CSS v4
+- [ ] 1.8 Install and configure HeroUI v3 component library
 
 ## 2. Database Schema
 
