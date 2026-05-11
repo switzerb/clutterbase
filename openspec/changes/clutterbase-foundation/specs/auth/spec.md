@@ -26,6 +26,13 @@ The system SHALL support email-based authentication. Users SHALL be able to sign
 - **WHEN** a user submits incorrect credentials
 - **THEN** the system displays an error message without revealing whether the email exists
 
+### Requirement: Users can sign in with Google
+The system SHALL support Google OAuth as a sign-in option. Users SHALL be able to authenticate using their Google account.
+
+#### Scenario: Google sign-in
+- **WHEN** a user clicks "Sign in with Google"
+- **THEN** the system redirects them to Google's OAuth flow and, on success, creates an authenticated session and redirects to the gallery
+
 ### Requirement: Admin role controls sensitive operations
 The system SHALL support an admin role. Admin users SHALL be able to manage family members (invite, remove) and manage tag categories. Non-admin authenticated users SHALL not have access to admin functions.
 
