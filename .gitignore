@@ -39,3 +39,6 @@ next-env.d.ts
 
 # ai absurdity
 .claude
+
+#supabase
+supabase/.temp
