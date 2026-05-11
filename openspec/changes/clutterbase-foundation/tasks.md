@@ -11,7 +11,7 @@
 
 - [ ] 2.1 Create `people` table (id, full_name, birth_year, death_year, notes, profile_photo_item_id)
 - [ ] 2.2 Create `family_units` table (id, parent_1_id, parent_2_id)
-- [ ] 2.3 Create `family_unit_children` table (id, family_unit_id, person_id, relationship enum)
+- [ ] 2.3 Create `family_unit_children` table (id, family_unit_id, person_id)
 - [ ] 2.4 Create `tag_categories` table (id, name, color)
 - [ ] 2.5 Create `tags` table (id, category_id, name, slug)
 - [ ] 2.6 Create `items` table (id, title, description, file_path, thumbnail_path, file_type, date_year, date_precision, uploaded_by, created_at)

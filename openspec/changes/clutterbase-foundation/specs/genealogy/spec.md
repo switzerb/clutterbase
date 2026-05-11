@@ -11,16 +11,12 @@ The system SHALL represent genealogical relationships using family units. Each f
 - **WHEN** a user creates a family unit with only one parent specified
 - **THEN** the system stores the unit with one parent and the other null
 
-### Requirement: Children are linked to family units with a relationship type
-The system SHALL link children to a family unit via a junction record that includes the relationship type: biological, adoptive, or step. A person SHALL be a child in at most one family unit.
+### Requirement: Children are linked to family units
+The system SHALL link children to a family unit via a junction record. A person SHALL be a child in at most one family unit.
 
-#### Scenario: Child added as biological
-- **WHEN** a user adds a person as a biological child of a family unit
-- **THEN** the system creates a family_unit_children record with `relationship = biological`
-
-#### Scenario: Child added as adopted
-- **WHEN** a user adds a person as an adopted child of a family unit
-- **THEN** the system creates a family_unit_children record with `relationship = adoptive`
+#### Scenario: Child added to a family unit
+- **WHEN** a user adds a person as a child of a family unit
+- **THEN** the system creates a family_unit_children record linking that person to the unit
 
 ### Requirement: A person can be a parent in multiple family units
 The system SHALL allow a person to appear as a parent in more than one family unit, enabling modeling of remarriage and multiple partnerships.
