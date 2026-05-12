@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getIsAdmin } from '@/lib/supabase/admin'
 import { getSignedUrl } from '@/lib/storage'
 import { GalleryFilters } from './_components/GalleryFilters'
 
@@ -55,9 +56,10 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
   const showIncomplete = incomplete === 'true'
   const selectedSort = sort ?? 'upload_desc'
 
-  const [categoriesResult, peopleResult] = await Promise.all([
+  const [categoriesResult, peopleResult, isAdmin] = await Promise.all([
     supabase.from('tag_categories').select('id, name, color, tags(id, name)').order('name'),
     supabase.from('people').select('id, full_name').order('full_name'),
+    getIsAdmin(),
   ])
 
   const categories = (categoriesResult.data ?? []) as Category[]
@@ -179,6 +181,11 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
             <Link href="/tags" className="hover:text-[var(--foreground)] transition-colors">
               Tags →
             </Link>
+            {isAdmin && (
+              <Link href="/admin" className="hover:text-[var(--foreground)] transition-colors">
+                Admin →
+              </Link>
+            )}
           </div>
         </div>
       </aside>
