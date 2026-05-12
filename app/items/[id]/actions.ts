@@ -41,6 +41,55 @@ export async function removeRelatedItem(
   redirect(`/items/${itemId}`)
 }
 
+export async function updateItem(
+  itemId: string,
+  _state: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string } | null> {
+  const { supabase } = await requireUser()
+
+  const title = (formData.get('title') as string)?.trim()
+  if (!title) return { error: 'Title is required.' }
+
+  const description = (formData.get('description') as string)?.trim() || null
+  const dateYearRaw = (formData.get('date_year') as string)?.trim()
+  const date_year = dateYearRaw ? parseInt(dateYearRaw, 10) : null
+  const date_precision = date_year ? ((formData.get('date_precision') as string) || 'year') : null
+
+  const { error } = await supabase
+    .from('items')
+    .update({ title, description, date_year, date_precision })
+    .eq('id', itemId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/items/${itemId}`)
+  redirect(`/items/${itemId}`)
+}
+
+export async function addItemPerson(itemId: string, formData: FormData) {
+  const { supabase } = await requireUser()
+
+  const personId = (formData.get('person_id') as string)?.trim()
+  if (!personId) return
+
+  await supabase
+    .from('item_people')
+    .upsert({ item_id: itemId, person_id: personId }, { ignoreDuplicates: true })
+
+  revalidatePath(`/items/${itemId}`)
+  redirect(`/items/${itemId}`)
+}
+
+export async function removeItemPerson(itemId: string, personId: string, _formData: FormData) {
+  const { supabase } = await requireUser()
+
+  await supabase.from('item_people').delete().eq('item_id', itemId).eq('person_id', personId)
+
+  revalidatePath(`/items/${itemId}`)
+  redirect(`/items/${itemId}`)
+}
+
 export async function setItemTags(itemId: string, formData: FormData) {
   const { supabase } = await requireUser()
 
