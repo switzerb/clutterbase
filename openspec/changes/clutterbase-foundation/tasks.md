@@ -52,13 +52,13 @@
 
 ## 6. People & Genealogy
 
-- [ ] 6.1 Build people list page with search by name
-- [ ] 6.2 Build person detail/profile page (name, dates, notes, linked items gallery)
-- [ ] 6.3 Build create/edit person form
+- [x] 6.1 Build people list page with search by name
+- [x] 6.2 Build person detail/profile page (name, dates, notes, linked items gallery)
+- [x] 6.3 Build create/edit person form
 - [ ] 6.4 Implement linking items to people (on item detail page)
-- [ ] 6.5 Build family unit management UI (add parents, add children with relationship type)
-- [ ] 6.6 Implement family tree navigation from person profile (parents up, children down)
-- [ ] 6.7 Support setting a person's profile photo from an existing item
+- [x] 6.5 Build family unit management UI (add parents, add children with relationship type)
+- [x] 6.6 Implement family tree navigation from person profile (parents up, children down)
+- [x] 6.7 Support setting a person's profile photo from an existing item
 
 ## 7. Tagging
 
