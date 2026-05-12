@@ -24,6 +24,16 @@ export async function createCategory(formData: FormData) {
   redirect('/tags')
 }
 
+export async function renameCategory(id: string, formData: FormData) {
+  await requireAdmin()
+  const supabase = await createClient()
+  const name = (formData.get('name') as string).trim()
+  if (!name) return
+  await supabase.from('tag_categories').update({ name }).eq('id', id)
+  revalidatePath('/tags')
+  redirect('/tags')
+}
+
 export async function deleteCategory(id: string, _formData: FormData) {
   await requireAdmin()
   const supabase = await createClient()
@@ -42,6 +52,17 @@ export async function createTag(categoryId: string, formData: FormData) {
     .from('tags')
     .insert({ category_id: categoryId, name, slug })
   if (error) return
+  revalidatePath('/tags')
+  redirect('/tags')
+}
+
+export async function renameTag(id: string, formData: FormData) {
+  await requireAdmin()
+  const supabase = await createClient()
+  const name = (formData.get('name') as string).trim()
+  if (!name) return
+  const slug = toSlug(name)
+  await supabase.from('tags').update({ name, slug }).eq('id', id)
   revalidatePath('/tags')
   redirect('/tags')
 }
