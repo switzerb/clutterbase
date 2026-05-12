@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getOrgId } from '@/lib/supabase/admin'
 import { generateThumbnail, isThumbnailable, thumbnailPath } from '@/lib/storage'
 
 export type RegisterItemResult = { itemId: string } | { error: string }
@@ -25,10 +26,12 @@ export async function registerItem(
 ): Promise<RegisterItemResult> {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const [{ data: { user } }, orgId] = await Promise.all([
+    supabase.auth.getUser(),
+    getOrgId(),
+  ])
   if (!user) return { error: 'Not authenticated' }
+  if (!orgId) return { error: 'No organization assigned to your account.' }
 
   const fileType = inferFileType(mimeType)
   let thumbPath: string | null = null
@@ -62,6 +65,7 @@ export async function registerItem(
     thumbnail_path: thumbPath,
     file_type: fileType,
     uploaded_by: user.id,
+    organization_id: orgId,
   })
 
   if (insertError) return { error: insertError.message }

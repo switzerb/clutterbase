@@ -44,6 +44,28 @@ The system SHALL support an admin role. Admin users SHALL be able to manage fami
 - **WHEN** a non-admin authenticated user attempts to access admin-only routes or actions
 - **THEN** the system returns an unauthorized response
 
+### Requirement: Users can sign out
+The system SHALL allow authenticated users to end their session. Signing out SHALL invalidate the current session and redirect to the sign-in page.
+
+#### Scenario: User signs out
+- **WHEN** an authenticated user clicks "Sign out"
+- **THEN** the system invalidates their session and redirects them to the sign-in page
+
+### Requirement: All data is scoped to an organization
+The system SHALL isolate all data (items, people, tags, family units) by organization. Users SHALL only see and interact with data belonging to their organization. An organization represents a family or other group sharing the archive.
+
+#### Scenario: User sees only their organization's data
+- **WHEN** an authenticated user views any list or detail page
+- **THEN** only records belonging to the user's organization are returned
+
+#### Scenario: User cannot read another organization's data
+- **WHEN** an authenticated user queries any data table
+- **THEN** row-level security filters results to the user's organization_id from their JWT
+
+#### Scenario: Admin invites a new user
+- **WHEN** an admin sends an email invitation
+- **THEN** the invited user is automatically assigned to the admin's organization upon account creation
+
 ### Requirement: Sessions persist across browser sessions
 The system SHALL maintain authenticated sessions so users do not need to sign in on every visit.
 

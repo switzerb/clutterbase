@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { requireAdmin } from '@/lib/supabase/admin'
+import { requireAdmin, getOrgId } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 
@@ -11,15 +11,21 @@ export type AdminState = { error?: string; success?: string } | null
 export async function inviteUser(_prev: AdminState, formData: FormData): Promise<AdminState> {
   await requireAdmin()
   const email = formData.get('email') as string
-  const origin = (await headers()).get('origin')
+  const [origin, orgId] = [(await headers()).get('origin'), await getOrgId()]
 
   const service = createServiceClient()
-  const { error } = await service.auth.admin.inviteUserByEmail(email, {
+  const { data: invited, error } = await service.auth.admin.inviteUserByEmail(email, {
     redirectTo: `${origin}/auth/callback`,
   })
 
   if (error) {
     return { error: 'Could not send invitation. The user may already exist.' }
+  }
+
+  if (invited.user && orgId) {
+    await service.auth.admin.updateUserById(invited.user.id, {
+      app_metadata: { organization_id: orgId },
+    })
   }
 
   revalidatePath('/admin')

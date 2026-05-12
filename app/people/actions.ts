@@ -3,16 +3,18 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getOrgId } from '@/lib/supabase/admin'
 
 export type PersonFormState = { error?: string } | null
 
 async function requireUser() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const [{ data: { user } }, orgId] = await Promise.all([
+    supabase.auth.getUser(),
+    getOrgId(),
+  ])
   if (!user) redirect('/sign-in')
-  return { supabase, user }
+  return { supabase, user, orgId: orgId! }
 }
 
 // ── People CRUD ────────────────────────────────────────────────────────────
@@ -21,7 +23,7 @@ export async function createPerson(
   _state: PersonFormState,
   formData: FormData,
 ): Promise<PersonFormState> {
-  const { supabase } = await requireUser()
+  const { supabase, orgId } = await requireUser()
 
   const full_name = (formData.get('full_name') as string).trim()
   if (!full_name) return { error: 'Name is required.' }
@@ -36,7 +38,7 @@ export async function createPerson(
 
   const { data, error } = await supabase
     .from('people')
-    .insert({ full_name, birth_year, death_year, notes })
+    .insert({ full_name, birth_year, death_year, notes, organization_id: orgId })
     .select('id')
     .single()
 
@@ -85,7 +87,7 @@ export async function deletePerson(id: string, _formData: FormData) {
 
 // Sets or updates the parents of a person. Creates a family unit if none exists.
 export async function setPersonParents(personId: string, formData: FormData) {
-  const { supabase } = await requireUser()
+  const { supabase, orgId } = await requireUser()
 
   const parent1Id = (formData.get('parent1Id') as string) || null
   const parent2Id = (formData.get('parent2Id') as string) || null
@@ -104,7 +106,7 @@ export async function setPersonParents(personId: string, formData: FormData) {
   } else {
     const { data: unit, error } = await supabase
       .from('family_units')
-      .insert({ parent_1_id: parent1Id, parent_2_id: parent2Id })
+      .insert({ parent_1_id: parent1Id, parent_2_id: parent2Id, organization_id: orgId })
       .select('id')
       .single()
     if (!error && unit) {
@@ -120,13 +122,13 @@ export async function setPersonParents(personId: string, formData: FormData) {
 
 // Creates a new family unit where the given person is parent_1.
 export async function createFamilyUnitAsParent(personId: string, formData: FormData) {
-  const { supabase } = await requireUser()
+  const { supabase, orgId } = await requireUser()
 
   const coParentId = (formData.get('coParentId') as string) || null
 
   await supabase
     .from('family_units')
-    .insert({ parent_1_id: personId, parent_2_id: coParentId })
+    .insert({ parent_1_id: personId, parent_2_id: coParentId, organization_id: orgId })
 
   revalidatePath(`/people/${personId}`)
   redirect(`/people/${personId}`)

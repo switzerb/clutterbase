@@ -22,12 +22,12 @@ The system SHALL allow items to be linked to any number of tags across any combi
 - **WHEN** a tag (e.g., "Cape Cod") exists in the system
 - **THEN** any item can be linked to it without creating a duplicate
 
-### Requirement: Tags are shared across all family members
-Tags SHALL be global to the application — not per-user. All authenticated users see and use the same tag vocabulary.
+### Requirement: Tags are shared across all members of the same organization
+Tags SHALL be scoped to an organization — not per-user. All members of the same organization see and use the same tag vocabulary. Members of different organizations cannot see each other's tags.
 
 #### Scenario: Tag created by one user, used by another
 - **WHEN** one family member creates a tag
-- **THEN** all other authenticated family members can apply that tag to items
+- **THEN** all other members of the same organization can apply that tag to items
 
 ### Requirement: Admin can manage tag categories and tags
 Admin users SHALL be able to create, rename, and delete tag categories and individual tags. Deleting a tag SHALL remove it from all items it was applied to.

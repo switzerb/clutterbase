@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/supabase/admin'
+import { requireAdmin, getOrgId } from '@/lib/supabase/admin'
 
 function toSlug(name: string): string {
   return name
@@ -15,10 +15,10 @@ function toSlug(name: string): string {
 
 export async function createCategory(formData: FormData) {
   await requireAdmin()
-  const supabase = await createClient()
+  const [supabase, orgId] = [await createClient(), await getOrgId()]
   const name = (formData.get('name') as string).trim()
   if (!name) return
-  const { error } = await supabase.from('tag_categories').insert({ name })
+  const { error } = await supabase.from('tag_categories').insert({ name, organization_id: orgId })
   if (error) return
   revalidatePath('/tags')
   redirect('/tags')

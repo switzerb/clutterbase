@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getIsAdmin } from '@/lib/supabase/admin'
 import { getSignedUrl } from '@/lib/storage'
+import { signOut } from '@/app/auth/actions'
 import { GalleryFilters } from './_components/GalleryFilters'
 
 type SearchParams = Promise<{
@@ -186,6 +187,14 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
                 Admin →
               </Link>
             )}
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="hover:text-[var(--foreground)] transition-colors text-left"
+              >
+                Sign out
+              </button>
+            </form>
           </div>
         </div>
       </aside>

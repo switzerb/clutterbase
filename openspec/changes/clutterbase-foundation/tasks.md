@@ -11,26 +11,30 @@
 
 ## 2. Database Schema
 
-- [x] 2.1 Create `people` table (id, full_name, birth_year, death_year, notes, profile_photo_item_id)
-- [x] 2.2 Create `family_units` table (id, parent_1_id, parent_2_id)
+- [x] 2.1 Create `people` table (id, full_name, birth_year, death_year, notes, profile_photo_item_id, organization_id)
+- [x] 2.2 Create `family_units` table (id, parent_1_id, parent_2_id, organization_id)
 - [x] 2.3 Create `family_unit_children` table (id, family_unit_id, person_id)
-- [x] 2.4 Create `tag_categories` table (id, name, color)
+- [x] 2.4 Create `tag_categories` table (id, name, color, organization_id)
 - [x] 2.5 Create `tags` table (id, category_id, name, slug)
-- [x] 2.6 Create `items` table (id, title, description, file_path, thumbnail_path, file_type, date_year, date_precision, uploaded_by, created_at)
+- [x] 2.6 Create `items` table (id, title, description, file_path, thumbnail_path, file_type, date_year, date_precision, uploaded_by, created_at, organization_id)
 - [x] 2.7 Create `item_tags` junction table (item_id, tag_id)
 - [x] 2.8 Create `item_people` junction table (item_id, person_id)
 - [x] 2.9 Create `item_relationships` table (id, item_a_id, item_b_id, note)
 - [x] 2.10 Seed default tag categories (place, event, topic, format)
+- [x] 2.11 Create `organizations` table (id, name, created_at)
 
 ## 3. Authentication
 
 - [x] 3.1 Configure Supabase Auth (enable email/password and magic link)
-- [x] 3.2 Write RLS policies: authenticated users can read all items, tags, people
+- [x] 3.2 Write RLS policies: authenticated users can read items, tags, and people scoped to their organization
 - [x] 3.3 Write RLS policies: authenticated users can insert items and item metadata
 - [x] 3.4 Write RLS policies: admin role can delete items and manage tag categories
 - [x] 3.5 Build sign-in page (email input, magic link + password options)
 - [x] 3.6 Implement session middleware to protect all routes
 - [x] 3.7 Build admin role check utility and protect admin routes
+- [x] 3.8 Build sign-out action and add sign-out button to gallery sidebar
+- [x] 3.9 Create organizations table; add organization_id to items, people, tag_categories, family_units; update RLS policies to scope all data by organization
+- [x] 3.10 Store organization_id in user JWT app_metadata; thread into all INSERT operations; assign invited users to admin's organization automatically
 
 ## 4. File Storage
 
@@ -55,7 +59,7 @@
 - [x] 6.1 Build people list page with search by name
 - [x] 6.2 Build person detail/profile page (name, dates, notes, linked items gallery)
 - [x] 6.3 Build create/edit person form
-- [ ] 6.4 Implement linking items to people (on item detail page)
+- [x] 6.4 Implement linking items to people (on item detail page)
 - [x] 6.5 Build family unit management UI (add parents, add children with relationship type)
 - [x] 6.6 Implement family tree navigation from person profile (parents up, children down)
 - [x] 6.7 Support setting a person's profile photo from an existing item
@@ -76,20 +80,20 @@
 
 ## 9. Search & Gallery
 
-- [ ] 9.1 Build gallery grid page with item thumbnail cards (title, date)
-- [ ] 9.2 Implement keyword search input (full-text on title and description)
-- [ ] 9.3 Implement tag filter sidebar (grouped by category, multi-select)
-- [ ] 9.4 Implement people filter
-- [ ] 9.5 Implement date/decade range filter
-- [ ] 9.6 Implement file type filter (photo, document, other)
-- [ ] 9.7 Implement sort controls (item date asc/desc, upload date asc/desc)
-- [ ] 9.8 Build "incomplete items" view (no date AND no people AND no tags)
-- [ ] 9.9 Build item detail page (full file display, all metadata, edit in place)
-- [ ] 9.10 Implement file-type placeholder for non-image items in gallery
+- [x] 9.1 Build gallery grid page with item thumbnail cards (title, date)
+- [x] 9.2 Implement keyword search input (full-text on title and description)
+- [x] 9.3 Implement tag filter sidebar (grouped by category, multi-select)
+- [x] 9.4 Implement people filter
+- [x] 9.5 Implement date/decade range filter
+- [x] 9.6 Implement file type filter (photo, document, other)
+- [x] 9.7 Implement sort controls (item date asc/desc, upload date asc/desc)
+- [x] 9.8 Build "incomplete items" view (no date AND no people AND no tags)
+- [x] 9.9 Build item detail page (full file display, all metadata, edit in place)
+- [x] 9.10 Implement file-type placeholder for non-image items in gallery
 
 ## 10. Admin
 
-- [ ] 10.1 Build admin panel page with user list and invite flow
-- [ ] 10.2 Implement user invitation via Supabase Auth email invite
-- [ ] 10.3 Implement remove user (revoke access)
-- [ ] 10.4 Protect all admin routes and actions with admin role check
+- [x] 10.1 Build admin panel page with user list and invite flow
+- [x] 10.2 Implement user invitation via Supabase Auth email invite
+- [x] 10.3 Implement remove user (revoke access)
+- [x] 10.4 Protect all admin routes and actions with admin role check
