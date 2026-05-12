@@ -1,54 +1,54 @@
 ## 1. Project Setup
 
-- [ ] 1.1 Create GitHub repository for clutterbase
-- [ ] 1.2 Initialize Next.js app with App Router and TypeScript
-- [ ] 1.3 Connect Vercel project to GitHub repository for CI/CD
-- [ ] 1.4 Configure Supabase project (enable Auth, Storage, and database)
-- [ ] 1.5 Add environment variables to Vercel and local .env.local (Supabase URL, anon key, service role key)
-  - [ ] 1.6 Install and configure Supabase client libraries (@supabase/supabase-js, @supabase/ssr)
-- [ ] 1.7 Install and configure Tailwind CSS v4
-- [ ] 1.8 Install and configure HeroUI v3 component library
+- [x] 1.1 Create GitHub repository for clutterbase
+- [x] 1.2 Initialize Next.js app with App Router and TypeScript
+- [x] 1.3 Connect Vercel project to GitHub repository for CI/CD
+- [x] 1.4 Configure Supabase project (enable Auth, Storage, and database)
+- [x] 1.5 Add environment variables to Vercel and local .env.local (Supabase URL, anon key, service role key)
+- [x] 1.6 Install and configure Supabase client libraries (@supabase/supabase-js, @supabase/ssr)
+- [x] 1.7 Install and configure Tailwind CSS v4
+- [x] 1.8 Install and configure HeroUI v3 component library
 
 ## 2. Database Schema
 
-- [ ] 2.1 Create `people` table (id, full_name, birth_year, death_year, notes, profile_photo_item_id)
-- [ ] 2.2 Create `family_units` table (id, parent_1_id, parent_2_id)
-- [ ] 2.3 Create `family_unit_children` table (id, family_unit_id, person_id)
-- [ ] 2.4 Create `tag_categories` table (id, name, color)
-- [ ] 2.5 Create `tags` table (id, category_id, name, slug)
-- [ ] 2.6 Create `items` table (id, title, description, file_path, thumbnail_path, file_type, date_year, date_precision, uploaded_by, created_at)
-- [ ] 2.7 Create `item_tags` junction table (item_id, tag_id)
-- [ ] 2.8 Create `item_people` junction table (item_id, person_id)
-- [ ] 2.9 Create `item_relationships` table (id, item_a_id, item_b_id, note)
-- [ ] 2.10 Seed default tag categories (place, event, topic, format)
+- [x] 2.1 Create `people` table (id, full_name, birth_year, death_year, notes, profile_photo_item_id)
+- [x] 2.2 Create `family_units` table (id, parent_1_id, parent_2_id)
+- [x] 2.3 Create `family_unit_children` table (id, family_unit_id, person_id)
+- [x] 2.4 Create `tag_categories` table (id, name, color)
+- [x] 2.5 Create `tags` table (id, category_id, name, slug)
+- [x] 2.6 Create `items` table (id, title, description, file_path, thumbnail_path, file_type, date_year, date_precision, uploaded_by, created_at)
+- [x] 2.7 Create `item_tags` junction table (item_id, tag_id)
+- [x] 2.8 Create `item_people` junction table (item_id, person_id)
+- [x] 2.9 Create `item_relationships` table (id, item_a_id, item_b_id, note)
+- [x] 2.10 Seed default tag categories (place, event, topic, format)
 
 ## 3. Authentication
 
-- [ ] 3.1 Configure Supabase Auth (enable email/password and magic link)
-- [ ] 3.2 Write RLS policies: authenticated users can read all items, tags, people
-- [ ] 3.3 Write RLS policies: authenticated users can insert items and item metadata
-- [ ] 3.4 Write RLS policies: admin role can delete items and manage tag categories
-- [ ] 3.5 Build sign-in page (email input, magic link + password options)
-- [ ] 3.6 Implement session middleware to protect all routes
-- [ ] 3.7 Build admin role check utility and protect admin routes
+- [x] 3.1 Configure Supabase Auth (enable email/password and magic link)
+- [x] 3.2 Write RLS policies: authenticated users can read all items, tags, people
+- [x] 3.3 Write RLS policies: authenticated users can insert items and item metadata
+- [x] 3.4 Write RLS policies: admin role can delete items and manage tag categories
+- [x] 3.5 Build sign-in page (email input, magic link + password options)
+- [x] 3.6 Implement session middleware to protect all routes
+- [x] 3.7 Build admin role check utility and protect admin routes
 
 ## 4. File Storage
 
-- [ ] 4.1 Create private Supabase Storage buckets: `originals` and `thumbnails`
-- [ ] 4.2 Configure Storage RLS: only authenticated users can read; only authenticated users can insert their own files
-- [ ] 4.3 Implement signed URL generation helper (1-hour expiry) for authenticated file access
-- [ ] 4.4 Implement thumbnail generation on upload (WebP, reduced resolution)
-- [ ] 4.5 Implement file path convention: `originals/items/{id}/original.{ext}` and `thumbnails/items/{id}/thumb.webp`
+- [x] 4.1 Create private Supabase Storage buckets: `originals` and `thumbnails`
+- [x] 4.2 Configure Storage RLS: only authenticated users can read; only authenticated users can insert their own files
+- [x] 4.3 Implement signed URL generation helper (1-hour expiry) for authenticated file access
+- [x] 4.4 Implement thumbnail generation on upload (WebP, reduced resolution)
+- [x] 4.5 Implement file path convention: `originals/items/{id}/original.{ext}` and `thumbnails/items/{id}/thumb.webp`
 
 ## 5. Upload
 
-- [ ] 5.1 Build upload page with drag-and-drop zone and file picker
-- [ ] 5.2 Implement single file upload flow: upload to Storage, create item record
-- [ ] 5.3 Implement batch upload: process files independently, show per-file progress
-- [ ] 5.4 Auto-derive item title from filename when no title is provided
-- [ ] 5.5 Infer file_type from MIME type on upload
-- [ ] 5.6 Trigger thumbnail generation after successful file storage
-- [ ] 5.7 Display per-file upload progress, success, and error states with retry
+- [x] 5.1 Build upload page with drag-and-drop zone and file picker
+- [x] 5.2 Implement single file upload flow: upload to Storage, create item record
+- [x] 5.3 Implement batch upload: process files independently, show per-file progress
+- [x] 5.4 Auto-derive item title from filename when no title is provided
+- [x] 5.5 Infer file_type from MIME type on upload
+- [x] 5.6 Trigger thumbnail generation after successful file storage
+- [x] 5.7 Display per-file upload progress, success, and error states with retry
 
 ## 6. People & Genealogy
 
