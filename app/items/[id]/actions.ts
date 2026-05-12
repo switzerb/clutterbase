@@ -13,6 +13,34 @@ async function requireUser() {
   return { supabase, user }
 }
 
+export async function addRelatedItem(itemId: string, formData: FormData) {
+  const { supabase } = await requireUser()
+
+  const relatedItemId = (formData.get('related_item_id') as string)?.trim()
+  if (!relatedItemId || relatedItemId === itemId) return
+  const note = (formData.get('note') as string)?.trim() || null
+
+  const [item_a_id, item_b_id] = [itemId, relatedItemId].sort()
+
+  await supabase.from('item_relationships').insert({ item_a_id, item_b_id, note })
+
+  revalidatePath(`/items/${itemId}`)
+  redirect(`/items/${itemId}`)
+}
+
+export async function removeRelatedItem(
+  itemId: string,
+  relationshipId: string,
+  _formData: FormData,
+) {
+  const { supabase } = await requireUser()
+
+  await supabase.from('item_relationships').delete().eq('id', relationshipId)
+
+  revalidatePath(`/items/${itemId}`)
+  redirect(`/items/${itemId}`)
+}
+
 export async function setItemTags(itemId: string, formData: FormData) {
   const { supabase } = await requireUser()
 

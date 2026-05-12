@@ -62,17 +62,17 @@
 
 ## 7. Tagging
 
-- [ ] 7.1 Build tag management admin page (create/rename/delete categories and tags)
-- [ ] 7.2 Implement tag selector component (grouped by category, searchable)
-- [ ] 7.3 Implement applying/removing tags on item detail page
-- [ ] 7.4 Display tags grouped by category on item detail page
+- [x] 7.1 Build tag management admin page (create/rename/delete categories and tags)
+- [x] 7.2 Implement tag selector component (grouped by category, searchable)
+- [x] 7.3 Implement applying/removing tags on item detail page
+- [x] 7.4 Display tags grouped by category on item detail page
 
 ## 8. Item Relationships
 
-- [ ] 8.1 Build related items UI section on item detail page (thumbnails + notes)
-- [ ] 8.2 Implement adding a related item (search for item, optional note, save)
-- [ ] 8.3 Implement removing a related item relationship
-- [ ] 8.4 Ensure bidirectional display: both items show each other as related
+- [x] 8.1 Build related items UI section on item detail page (thumbnails + notes)
+- [x] 8.2 Implement adding a related item (search for item, optional note, save)
+- [x] 8.3 Implement removing a related item relationship
+- [x] 8.4 Ensure bidirectional display: both items show each other as related
 
 ## 9. Search & Gallery
 
