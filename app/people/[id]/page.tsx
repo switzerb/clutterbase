@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Card } from '@heroui/react'
 import { createClient } from '@/lib/supabase/server'
-import { getSignedUrl } from '@/lib/storage'
+import { getSignedUrl, getThumbnailUrls } from '@/lib/storage'
 import {
   setPersonParents,
   createFamilyUnitAsParent,
@@ -64,19 +64,7 @@ export default async function PersonPage({ params }: { params: Params }) {
   }[]
   const allPeople = (allPeopleResult.data ?? []) as PersonRef[]
 
-  // Generate signed URLs for linked item thumbnails
-  const thumbnailUrls: Record<string, string> = {}
-  await Promise.all(
-    linkedItems
-      .filter(item => item.thumbnail_path)
-      .map(async item => {
-        try {
-          thumbnailUrls[item.id] = await getSignedUrl('thumbnails', item.thumbnail_path!)
-        } catch {
-          // skip — item displays without thumbnail
-        }
-      }),
-  )
+  const thumbnailUrls = await getThumbnailUrls(linkedItems)
 
   // Profile photo
   let avatarUrl: string | null = null
@@ -329,6 +317,8 @@ export default async function PersonPage({ params }: { params: Params }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={thumbnailUrls[item.id]}
+                      loading="lazy"
+                      decoding="async"
                       alt={item.title}
                       className="size-full object-cover transition-opacity group-hover:opacity-90"
                     />

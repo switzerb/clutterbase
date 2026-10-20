@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getIsAdmin } from '@/lib/supabase/admin'
-import { getSignedUrl } from '@/lib/storage'
+import { getThumbnailUrls } from '@/lib/storage'
 import { signOut } from '@/app/auth/actions'
 import { GalleryFilters } from './_components/GalleryFilters'
 
@@ -138,19 +138,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
     )
   }
 
-  // Generate signed thumbnail URLs in parallel
-  const thumbnailUrls: Record<string, string> = {}
-  await Promise.all(
-    items
-      .filter(item => item.thumbnail_path)
-      .map(item =>
-        getSignedUrl('thumbnails', item.thumbnail_path!)
-          .then(url => {
-            thumbnailUrls[item.id] = url
-          })
-          .catch(() => {}),
-      ),
-  )
+  const thumbnailUrls = await getThumbnailUrls(items)
 
   const currentFilters = { q, tags, person, decade, type, sort, incomplete }
 
@@ -220,6 +208,8 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={thumbnailUrls[item.id]}
+                      loading="lazy"
+                      decoding="async"
                       alt={item.title}
                       className="size-full object-cover transition-transform group-hover:scale-105"
                     />

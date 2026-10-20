@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { Card } from '@heroui/react'
 import { createClient } from '@/lib/supabase/server'
-import { getSignedUrl } from '@/lib/storage'
+import { getSignedUrl, getThumbnailUrls } from '@/lib/storage'
 import { TagSelector } from '@/app/_components/TagSelector'
 import { ItemEditForm } from './_components/ItemEditForm'
 import { PeoplePicker } from './_components/PeoplePicker'
@@ -75,27 +75,11 @@ export default async function ItemPage({ params }: { params: Params }) {
         r.item !== null,
     )
 
-  // Generate signed URLs for the file and related item thumbnails in parallel
-  let fileUrl: string | null = null
-  const thumbnailUrls: Record<string, string> = {}
-
-  await Promise.all([
+  const [fileUrl, thumbnailUrls] = await Promise.all([
     item.file_path
-      ? getSignedUrl('originals', item.file_path)
-          .then(url => {
-            fileUrl = url
-          })
-          .catch(() => {})
-      : Promise.resolve(),
-    ...relatedItems
-      .filter(r => r.item.thumbnail_path)
-      .map(r =>
-        getSignedUrl('thumbnails', r.item.thumbnail_path!)
-          .then(url => {
-            thumbnailUrls[r.item.id] = url
-          })
-          .catch(() => {}),
-      ),
+      ? getSignedUrl('originals', item.file_path).catch(() => null)
+      : Promise.resolve(null),
+    getThumbnailUrls(relatedItems.map(relationship => relationship.item)),
   ])
 
   const appliedByCategory = categories
@@ -269,6 +253,8 @@ export default async function ItemPage({ params }: { params: Params }) {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={thumbnailUrls[other.id]}
+                        loading="lazy"
+                        decoding="async"
                         alt={other.title}
                         className="size-full object-cover"
                       />

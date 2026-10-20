@@ -31,6 +31,35 @@ export async function getSignedUrl(
   return data.signedUrl
 }
 
+// Missing thumbnails remain placeholders; sign each distinct path once per page.
+export async function getThumbnailUrls(
+  items: readonly { id: string; thumbnail_path: string | null }[],
+): Promise<Record<string, string>> {
+  const paths = [...new Set(items.flatMap(item => item.thumbnail_path ? [item.thumbnail_path] : []))]
+  if (paths.length === 0) return {}
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.storage
+    .from('thumbnails')
+    .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS)
+  if (error) {
+    console.error('Unable to sign thumbnail URLs:', error.message)
+    return {}
+  }
+
+  const urlsByPath = new Map(
+    data.flatMap(entry => entry.path && entry.signedUrl && !entry.error
+      ? [[entry.path, entry.signedUrl] as const]
+      : []),
+  )
+  const urls: Record<string, string> = {}
+  for (const item of items) {
+    const url = item.thumbnail_path ? urlsByPath.get(item.thumbnail_path) : undefined
+    if (url) urls[item.id] = url
+  }
+  return urls
+}
+
 // Thumbnail generation (4.4)
 // Returns a WebP buffer resized to fit within THUMBNAIL_MAX_PX on the longest side.
 // Throws if the input is not a recognised image format.
