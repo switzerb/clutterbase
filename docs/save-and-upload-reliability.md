@@ -6,7 +6,7 @@ Apply `supabase/migrations/20261020000000_atomic_saves.sql` to the target Supaba
 
 The functions are `replace_item_tags` and `set_person_parents`. Both run as the signed-in user, retain RLS, check organization membership, and lock the parent record while saving. Their multi-step writes commit together or roll back together. No delete/insert fallback is used when a function is missing: the form displays an error instead.
 
-The migration has been tested in a disposable PostgreSQL 15 database using the repository migrations and simulated Supabase auth claims. It has not been applied to the hosted project by this change.
+The migration has been tested in a disposable PostgreSQL 15 database using the repository migrations and simulated Supabase auth claims. It was applied to hosted project `hbshdkyfzefwskokwiyf` on 2026-10-20 and recorded in migration history as `20261020000000`. Function permissions and unchanged archive records were verified. See the [Supabase workflow and release checklist](supabase-workflow.md) for the completed steps and remaining app/deployment checks.
 
 ## Saves
 
