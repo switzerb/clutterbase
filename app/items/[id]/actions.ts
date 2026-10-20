@@ -31,7 +31,6 @@ export async function addRelatedItem(itemId: string, formData: FormData) {
 export async function removeRelatedItem(
   itemId: string,
   relationshipId: string,
-  _formData: FormData,
 ) {
   const { supabase } = await requireUser()
 
@@ -81,7 +80,7 @@ export async function addItemPerson(itemId: string, formData: FormData) {
   redirect(`/items/${itemId}`)
 }
 
-export async function removeItemPerson(itemId: string, personId: string, _formData: FormData) {
+export async function removeItemPerson(itemId: string, personId: string) {
   const { supabase } = await requireUser()
 
   await supabase.from('item_people').delete().eq('item_id', itemId).eq('person_id', personId)

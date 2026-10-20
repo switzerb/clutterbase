@@ -96,7 +96,6 @@ export default async function PersonPage({ params }: { params: Params }) {
   }
 
   const parentUnit = childOf?.family_units ?? null
-  const parentUnitId: string | null = childOf?.family_unit_id ?? null
 
   return (
     <main className="flex min-h-screen flex-col items-start gap-6 p-8 max-w-3xl mx-auto w-full">

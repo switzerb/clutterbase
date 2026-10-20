@@ -15,7 +15,7 @@ See [launch status and next steps](.working/launch.md) for the Thanksgiving targ
 
 ## Run locally against the existing backend
 
-Use Node.js 22 and pnpm 10 (the recovery checks used Node 22.14.0 and pnpm 10.15.1). Install the versions in the lockfile:
+Use Node.js 24.22.0 LTS and pnpm 10.34.7. Node is pinned in `.tool-versions` (asdf) and `.node-version`; `package.json` selects Node 24 for Vercel and pins pnpm. With asdf, run `asdf install` first. Install the versions in the lockfile:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -27,8 +27,10 @@ Skip the copy if `.env.local` already exists. Fill its values from the existing 
 | Variable | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project API URL; supplied in the example |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public client API key from that same project |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only key used for admin invitations and user management |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable client key from that same project |
+| `SUPABASE_SECRET_KEY` | Server-only secret key used for admin invitations and user management |
+
+The old `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` names remain fallbacks during migration; new values take precedence. See [authentication setup](docs/authentication.md) for rollout and email template configuration.
 
 Never commit real environment files or put the service-role key in a `NEXT_PUBLIC_` variable. `.env.local` is ignored by Git. A local app using the hosted backend reads and writes the existing archive; use disposable test records for smoke checks.
 
@@ -47,11 +49,18 @@ An existing account needs `app_metadata.organization_id` matching a row in `orga
 ```sh
 pnpm lint
 pnpm typecheck
+pnpm test
 pnpm build
 pnpm start
 ```
 
 Run `start` after `build`, with the development server stopped or on a different port. `typecheck` generates Next.js route types before checking TypeScript. The build downloads Geist fonts from Google, so it needs network access. A passing build does not validate credentials, database migrations, or authenticated workflows.
+
+### Upgrade baseline as of October 20, 2026
+
+The app uses HeroUI 3.2.6, Supabase JS 2.118.0 / SSR 0.12.7, Next.js 16.4.2, React 19.3.1, Tailwind 4.3.3, and Sharp 0.35.5. Node 24 is the current LTS line supported by Vercel; Node 26 is still Current. pnpm stays on the latest 10.x patch to retain the existing lockfile/tooling line.
+
+TypeScript is held at 6.0.x because Next's TypeScript ESLint parser requires `<6.1`. ESLint is held at 9.39.5 because the React, import, and accessibility plugins bundled with Next do not declare support for ESLint 10. ESLint 9 is deprecated upstream; revisit this exception when those plugins support 10. Do not force incompatible peer dependencies just to clear an outdated-package report.
 
 ## Hosting and database changes
 

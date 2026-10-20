@@ -34,7 +34,7 @@ export async function renameCategory(id: string, formData: FormData) {
   redirect('/tags')
 }
 
-export async function deleteCategory(id: string, _formData: FormData) {
+export async function deleteCategory(id: string) {
   await requireAdmin()
   const supabase = await createClient()
   await supabase.from('tag_categories').delete().eq('id', id)
@@ -67,7 +67,7 @@ export async function renameTag(id: string, formData: FormData) {
   redirect('/tags')
 }
 
-export async function deleteTag(id: string, _formData: FormData) {
+export async function deleteTag(id: string) {
   await requireAdmin()
   const supabase = await createClient()
   await supabase.from('tags').delete().eq('id', id)

@@ -1,38 +1,44 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { getSupabaseConfig } from '@/lib/supabase/config'
+import { safeRedirectPath } from '@/lib/supabase/redirect'
 
-// Handles the redirect after a magic-link click. Supabase sends a `code`
-// query param; we exchange it for a session and set the auth cookies.
+// OAuth/PKCE uses a code; SSR email templates can send a token_hash instead.
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const tokenHash = searchParams.get('token_hash')
+  const type = searchParams.get('type')
+  const next = safeRedirectPath(searchParams.get('next'))
+  const response = NextResponse.redirect(new URL(next, origin))
+  response.headers.set('Cache-Control', 'private, no-store')
+  response.headers.set('Referrer-Policy', 'no-referrer')
 
+  const { url, key } = getSupabaseConfig()
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll(cookiesToSet, headers) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          request.cookies.set(name, value)
+          response.cookies.set(name, value, options)
+        })
+        Object.entries(headers).forEach(([name, value]) => response.headers.set(name, value))
+      },
+    },
+  })
+
+  let authenticated = false
   if (code) {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
-
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return NextResponse.redirect(new URL(next, origin))
-    }
+    authenticated = !error
+  } else if (tokenHash && (type === 'email' || type === 'invite')) {
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
+    authenticated = !error
   }
 
-  return NextResponse.redirect(new URL('/sign-in?error=1', origin))
+  if (!authenticated) {
+    response.headers.set('Location', new URL('/sign-in?error=1', origin).toString())
+  }
+  return response
 }

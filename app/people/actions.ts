@@ -76,7 +76,7 @@ export async function updatePerson(
   redirect(`/people/${id}`)
 }
 
-export async function deletePerson(id: string, _formData: FormData) {
+export async function deletePerson(id: string) {
   const { supabase } = await requireUser()
   await supabase.from('people').delete().eq('id', id)
   revalidatePath('/people')
@@ -161,7 +161,6 @@ export async function removeChildFromUnit(
   personId: string,
   unitId: string,
   childId: string,
-  _formData: FormData,
 ) {
   const { supabase } = await requireUser()
 
@@ -179,7 +178,6 @@ export async function removeChildFromUnit(
 export async function deleteFamilyUnit(
   personId: string,
   unitId: string,
-  _formData: FormData,
 ) {
   const { supabase } = await requireUser()
 
