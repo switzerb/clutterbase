@@ -1,3 +1,4 @@
+import { ActionForm } from '@/app/_components/ActionForm'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
@@ -45,11 +46,11 @@ export default async function AdminPage() {
               {user.id === currentUser?.id ? (
                 <span className="text-xs text-[var(--muted)]">you</span>
               ) : (
-                <form action={removeUser.bind(null, user.id)}>
+                <ActionForm action={removeUser.bind(null, user.id)}>
                   <button type="submit" className="text-xs text-[var(--danger)] hover:underline">
                     Remove
                   </button>
-                </form>
+                </ActionForm>
               )}
             </div>
           ))}

@@ -1,3 +1,4 @@
+import { ActionForm } from '@/app/_components/ActionForm'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { Card } from '@heroui/react'
@@ -171,14 +172,14 @@ export default async function ItemPage({ params }: { params: Params }) {
                 >
                   {person.full_name}
                 </Link>
-                <form action={removeItemPerson.bind(null, id, person.id)}>
+                <ActionForm action={removeItemPerson.bind(null, id, person.id)}>
                   <button
                     type="submit"
                     className="shrink-0 text-xs text-[var(--danger)] hover:underline"
                   >
                     Remove
                   </button>
-                </form>
+                </ActionForm>
               </li>
             ))}
           </ul>
@@ -271,14 +272,14 @@ export default async function ItemPage({ params }: { params: Params }) {
                   </Link>
                   {note && <p className="text-xs text-[var(--muted)]">{note}</p>}
                 </div>
-                <form action={removeRelatedItem.bind(null, id, relationshipId)}>
+                <ActionForm action={removeRelatedItem.bind(null, id, relationshipId)}>
                   <button
                     type="submit"
                     className="shrink-0 text-xs text-[var(--danger)] hover:underline"
                   >
                     Remove
                   </button>
-                </form>
+                </ActionForm>
               </li>
             ))}
           </ul>

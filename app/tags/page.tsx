@@ -1,3 +1,4 @@
+import { ActionForm } from '@/app/_components/ActionForm'
 import { requireAdmin } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -42,11 +43,11 @@ export default async function TagsPage() {
             {/* Category header */}
             <div className="flex items-center justify-between gap-4">
               <h2 className="font-semibold capitalize">{category.name}</h2>
-              <form action={deleteCategory.bind(null, category.id)}>
+              <ActionForm action={deleteCategory.bind(null, category.id)}>
                 <button type="submit" className="text-xs text-[var(--danger)] hover:underline">
                   Delete category
                 </button>
-              </form>
+              </ActionForm>
             </div>
 
             {/* Rename category */}
@@ -54,7 +55,7 @@ export default async function TagsPage() {
               <summary className="cursor-pointer text-xs text-[var(--muted)] hover:text-[var(--foreground)]">
                 Rename category…
               </summary>
-              <form
+              <ActionForm
                 action={renameCategory.bind(null, category.id)}
                 className="mt-2 flex gap-2"
               >
@@ -67,7 +68,7 @@ export default async function TagsPage() {
                 <button type="submit" className={btnCls}>
                   Save
                 </button>
-              </form>
+              </ActionForm>
             </details>
 
             {/* Tags list */}
@@ -77,20 +78,20 @@ export default async function TagsPage() {
                   <li key={tag.id} className="flex flex-col gap-1 py-2 first:pt-0 last:pb-0">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-sm">{tag.name}</span>
-                      <form action={deleteTag.bind(null, tag.id)}>
+                      <ActionForm action={deleteTag.bind(null, tag.id)}>
                         <button
                           type="submit"
                           className="text-xs text-[var(--danger)] hover:underline"
                         >
                           Delete
                         </button>
-                      </form>
+                      </ActionForm>
                     </div>
                     <details>
                       <summary className="cursor-pointer text-xs text-[var(--muted)] hover:text-[var(--foreground)]">
                         Rename…
                       </summary>
-                      <form
+                      <ActionForm
                         action={renameTag.bind(null, tag.id)}
                         className="mt-1 flex gap-2"
                       >
@@ -103,7 +104,7 @@ export default async function TagsPage() {
                         <button type="submit" className={btnCls}>
                           Save
                         </button>
-                      </form>
+                      </ActionForm>
                     </details>
                   </li>
                 ))}
@@ -113,12 +114,12 @@ export default async function TagsPage() {
             )}
 
             {/* Add tag */}
-            <form action={createTag.bind(null, category.id)} className="flex gap-2">
+            <ActionForm action={createTag.bind(null, category.id)} className="flex gap-2">
               <input name="name" required placeholder="New tag…" className={inputCls} />
               <button type="submit" className={btnCls}>
                 Add tag
               </button>
-            </form>
+            </ActionForm>
           </div>
         ))}
 
@@ -130,12 +131,12 @@ export default async function TagsPage() {
       {/* Add category */}
       <div className="w-full rounded-[var(--radius)] border border-[var(--border)] p-4">
         <h2 className="mb-3 font-semibold">Add category</h2>
-        <form action={createCategory} className="flex gap-2">
+        <ActionForm action={createCategory} className="flex gap-2">
           <input name="name" required placeholder="Category name…" className={inputCls} />
           <button type="submit" className={btnCls}>
             Add category
           </button>
-        </form>
+        </ActionForm>
       </div>
     </main>
   )

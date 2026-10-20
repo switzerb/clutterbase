@@ -1,5 +1,6 @@
 'use server'
 
+import { checkWrite, formText } from '@/lib/action-result'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -16,10 +17,10 @@ function toSlug(name: string): string {
 export async function createCategory(formData: FormData) {
   await requireAdmin()
   const [supabase, orgId] = [await createClient(), await getOrgId()]
-  const name = (formData.get('name') as string).trim()
-  if (!name) return
+  const name = formText(formData, 'name')
+  if (!name) return { error: 'Name is required.' }
   const { error } = await supabase.from('tag_categories').insert({ name, organization_id: orgId })
-  if (error) return
+  if (error) return { error: 'Could not save this change. Please try again.' }
   revalidatePath('/tags')
   redirect('/tags')
 }
@@ -27,9 +28,10 @@ export async function createCategory(formData: FormData) {
 export async function renameCategory(id: string, formData: FormData) {
   await requireAdmin()
   const supabase = await createClient()
-  const name = (formData.get('name') as string).trim()
-  if (!name) return
-  await supabase.from('tag_categories').update({ name }).eq('id', id)
+  const name = formText(formData, 'name')
+  if (!name) return { error: 'Name is required.' }
+  const failure = await checkWrite(supabase.from('tag_categories').update({ name }).eq('id', id).select())
+  if (failure) return failure
   revalidatePath('/tags')
   redirect('/tags')
 }
@@ -37,7 +39,8 @@ export async function renameCategory(id: string, formData: FormData) {
 export async function deleteCategory(id: string) {
   await requireAdmin()
   const supabase = await createClient()
-  await supabase.from('tag_categories').delete().eq('id', id)
+  const failure = await checkWrite(supabase.from('tag_categories').delete().eq('id', id).select())
+  if (failure) return failure
   revalidatePath('/tags')
   redirect('/tags')
 }
@@ -45,13 +48,13 @@ export async function deleteCategory(id: string) {
 export async function createTag(categoryId: string, formData: FormData) {
   await requireAdmin()
   const supabase = await createClient()
-  const name = (formData.get('name') as string).trim()
-  if (!name) return
+  const name = formText(formData, 'name')
+  if (!name) return { error: 'Name is required.' }
   const slug = toSlug(name)
   const { error } = await supabase
     .from('tags')
     .insert({ category_id: categoryId, name, slug })
-  if (error) return
+  if (error) return { error: 'Could not save this change. Please try again.' }
   revalidatePath('/tags')
   redirect('/tags')
 }
@@ -59,10 +62,11 @@ export async function createTag(categoryId: string, formData: FormData) {
 export async function renameTag(id: string, formData: FormData) {
   await requireAdmin()
   const supabase = await createClient()
-  const name = (formData.get('name') as string).trim()
-  if (!name) return
+  const name = formText(formData, 'name')
+  if (!name) return { error: 'Name is required.' }
   const slug = toSlug(name)
-  await supabase.from('tags').update({ name, slug }).eq('id', id)
+  const failure = await checkWrite(supabase.from('tags').update({ name, slug }).eq('id', id).select())
+  if (failure) return failure
   revalidatePath('/tags')
   redirect('/tags')
 }
@@ -70,7 +74,8 @@ export async function renameTag(id: string, formData: FormData) {
 export async function deleteTag(id: string) {
   await requireAdmin()
   const supabase = await createClient()
-  await supabase.from('tags').delete().eq('id', id)
+  const failure = await checkWrite(supabase.from('tags').delete().eq('id', id).select())
+  if (failure) return failure
   revalidatePath('/tags')
   redirect('/tags')
 }

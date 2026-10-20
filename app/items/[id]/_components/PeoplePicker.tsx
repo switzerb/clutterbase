@@ -1,5 +1,6 @@
 'use client'
 
+import { ActionForm } from '@/app/_components/ActionForm'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { addItemPerson } from '../actions'
@@ -59,7 +60,7 @@ export function PeoplePicker({ itemId, excludeIds }: Props) {
   const action = addItemPerson.bind(null, itemId)
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <ActionForm action={action} className="flex flex-col gap-3">
       {selected ? (
         <>
           <input type="hidden" name="person_id" value={selected.id} />
@@ -110,6 +111,6 @@ export function PeoplePicker({ itemId, excludeIds }: Props) {
           )}
         </div>
       )}
-    </form>
+    </ActionForm>
   )
 }

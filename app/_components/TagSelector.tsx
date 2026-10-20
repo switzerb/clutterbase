@@ -1,5 +1,7 @@
 'use client'
 
+import { ActionForm } from '@/app/_components/ActionForm'
+import type { ActionResult } from '@/lib/action-result'
 import { useState } from 'react'
 
 type Tag = { id: string; name: string }
@@ -8,7 +10,7 @@ type Category = { id: string; name: string; color: string | null; tags: Tag[] }
 type Props = {
   categories: Category[]
   selectedTagIds: string[]
-  action: (formData: FormData) => Promise<void>
+  action: (formData: FormData) => Promise<ActionResult>
 }
 
 export function TagSelector({ categories, selectedTagIds, action }: Props) {
@@ -33,7 +35,7 @@ export function TagSelector({ categories, selectedTagIds, action }: Props) {
   }
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <ActionForm action={action} className="flex flex-col gap-4">
       {Array.from(selected).map(tagId => (
         <input key={tagId} type="hidden" name="tag_id" value={tagId} />
       ))}
@@ -89,6 +91,6 @@ export function TagSelector({ categories, selectedTagIds, action }: Props) {
       >
         Save tags
       </button>
-    </form>
+    </ActionForm>
   )
 }
