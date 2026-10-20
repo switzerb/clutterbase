@@ -40,6 +40,7 @@ next-env.d.ts
 # ai absurdity
 .claude
 .agents
+.working
 
 #supabase
 supabase/.temp
