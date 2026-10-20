@@ -38,11 +38,18 @@ const selectCls =
 export function GalleryFilters({ categories, people, currentFilters }: Props) {
   const router = useRouter()
   const [searchValue, setSearchValue] = useState(currentFilters.q ?? '')
+  const [previousQuery, setPreviousQuery] = useState(currentFilters.q ?? '')
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    setSearchValue(currentFilters.q ?? '')
-  }, [currentFilters.q])
+  const query = currentFilters.q ?? ''
+  if (query !== previousQuery) {
+    setPreviousQuery(query)
+    setSearchValue(query)
+  }
+
+  useEffect(() => () => {
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+  }, [query])
 
   function buildUrl(overrides: Record<string, string | null>): string {
     const merged: Record<string, string | undefined> = { ...currentFilters }
@@ -114,6 +121,7 @@ export function GalleryFilters({ categories, people, currentFilters }: Props) {
         <button
           type="button"
           onClick={() => {
+            if (searchTimer.current) clearTimeout(searchTimer.current)
             setSearchValue('')
             router.push('/')
           }}
