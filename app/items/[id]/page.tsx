@@ -1,8 +1,9 @@
+import { ActionForm } from '@/app/_components/ActionForm'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { Card } from '@heroui/react'
 import { createClient } from '@/lib/supabase/server'
-import { getSignedUrl } from '@/lib/storage'
+import { getSignedUrl, getThumbnailUrls } from '@/lib/storage'
 import { TagSelector } from '@/app/_components/TagSelector'
 import { ItemEditForm } from './_components/ItemEditForm'
 import { PeoplePicker } from './_components/PeoplePicker'
@@ -75,27 +76,11 @@ export default async function ItemPage({ params }: { params: Params }) {
         r.item !== null,
     )
 
-  // Generate signed URLs for the file and related item thumbnails in parallel
-  let fileUrl: string | null = null
-  const thumbnailUrls: Record<string, string> = {}
-
-  await Promise.all([
+  const [fileUrl, thumbnailUrls] = await Promise.all([
     item.file_path
-      ? getSignedUrl('originals', item.file_path)
-          .then(url => {
-            fileUrl = url
-          })
-          .catch(() => {})
-      : Promise.resolve(),
-    ...relatedItems
-      .filter(r => r.item.thumbnail_path)
-      .map(r =>
-        getSignedUrl('thumbnails', r.item.thumbnail_path!)
-          .then(url => {
-            thumbnailUrls[r.item.id] = url
-          })
-          .catch(() => {}),
-      ),
+      ? getSignedUrl('originals', item.file_path).catch(() => null)
+      : Promise.resolve(null),
+    getThumbnailUrls(relatedItems.map(relationship => relationship.item)),
   ])
 
   const appliedByCategory = categories
@@ -187,14 +172,14 @@ export default async function ItemPage({ params }: { params: Params }) {
                 >
                   {person.full_name}
                 </Link>
-                <form action={removeItemPerson.bind(null, id, person.id)}>
+                <ActionForm action={removeItemPerson.bind(null, id, person.id)}>
                   <button
                     type="submit"
                     className="shrink-0 text-xs text-[var(--danger)] hover:underline"
                   >
                     Remove
                   </button>
-                </form>
+                </ActionForm>
               </li>
             ))}
           </ul>
@@ -269,6 +254,8 @@ export default async function ItemPage({ params }: { params: Params }) {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={thumbnailUrls[other.id]}
+                        loading="lazy"
+                        decoding="async"
                         alt={other.title}
                         className="size-full object-cover"
                       />
@@ -285,14 +272,14 @@ export default async function ItemPage({ params }: { params: Params }) {
                   </Link>
                   {note && <p className="text-xs text-[var(--muted)]">{note}</p>}
                 </div>
-                <form action={removeRelatedItem.bind(null, id, relationshipId)}>
+                <ActionForm action={removeRelatedItem.bind(null, id, relationshipId)}>
                   <button
                     type="submit"
                     className="shrink-0 text-xs text-[var(--danger)] hover:underline"
                   >
                     Remove
                   </button>
-                </form>
+                </ActionForm>
               </li>
             ))}
           </ul>

@@ -1,20 +1,17 @@
 'use server'
 
+import { checkWrite, formText } from '@/lib/action-result'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getOrgId } from '@/lib/supabase/admin'
 
 export type PersonFormState = { error?: string } | null
 
 async function requireUser() {
   const supabase = await createClient()
-  const [{ data: { user } }, orgId] = await Promise.all([
-    supabase.auth.getUser(),
-    getOrgId(),
-  ])
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/sign-in')
-  return { supabase, user, orgId: orgId! }
+  return { supabase, user, orgId: user.app_metadata?.organization_id ?? null }
 }
 
 // ── People CRUD ────────────────────────────────────────────────────────────
@@ -24,8 +21,9 @@ export async function createPerson(
   formData: FormData,
 ): Promise<PersonFormState> {
   const { supabase, orgId } = await requireUser()
+  if (!orgId) return { error: 'No organization assigned to your account.' }
 
-  const full_name = (formData.get('full_name') as string).trim()
+  const full_name = formText(formData, 'full_name')
   if (!full_name) return { error: 'Name is required.' }
 
   const birth_year = formData.get('birth_year')
@@ -34,7 +32,7 @@ export async function createPerson(
   const death_year = formData.get('death_year')
     ? parseInt(formData.get('death_year') as string, 10)
     : null
-  const notes = (formData.get('notes') as string).trim() || null
+  const notes = formText(formData, 'notes') || null
 
   const { data, error } = await supabase
     .from('people')
@@ -53,7 +51,7 @@ export async function updatePerson(
 ): Promise<PersonFormState> {
   const { supabase } = await requireUser()
 
-  const full_name = (formData.get('full_name') as string).trim()
+  const full_name = formText(formData, 'full_name')
   if (!full_name) return { error: 'Name is required.' }
 
   const birth_year = formData.get('birth_year')
@@ -62,23 +60,23 @@ export async function updatePerson(
   const death_year = formData.get('death_year')
     ? parseInt(formData.get('death_year') as string, 10)
     : null
-  const notes = (formData.get('notes') as string).trim() || null
+  const notes = formText(formData, 'notes') || null
   const profile_photo_item_id =
-    (formData.get('profile_photo_item_id') as string).trim() || null
+    formText(formData, 'profile_photo_item_id') || null
 
-  const { error } = await supabase
+  const failure = await checkWrite(supabase
     .from('people')
     .update({ full_name, birth_year, death_year, notes, profile_photo_item_id })
-    .eq('id', id)
-
-  if (error) return { error: error.message }
+    .eq('id', id).select())
+  if (failure) return failure
   revalidatePath(`/people/${id}`)
   redirect(`/people/${id}`)
 }
 
-export async function deletePerson(id: string, _formData: FormData) {
+export async function deletePerson(id: string) {
   const { supabase } = await requireUser()
-  await supabase.from('people').delete().eq('id', id)
+  const failure = await checkWrite(supabase.from('people').delete().eq('id', id).select())
+  if (failure) return failure
   revalidatePath('/people')
   redirect('/people')
 }
@@ -87,34 +85,15 @@ export async function deletePerson(id: string, _formData: FormData) {
 
 // Sets or updates the parents of a person. Creates a family unit if none exists.
 export async function setPersonParents(personId: string, formData: FormData) {
-  const { supabase, orgId } = await requireUser()
+  const { supabase } = await requireUser()
 
   const parent1Id = (formData.get('parent1Id') as string) || null
   const parent2Id = (formData.get('parent2Id') as string) || null
 
-  const { data: existing } = await supabase
-    .from('family_unit_children')
-    .select('family_unit_id')
-    .eq('person_id', personId)
-    .maybeSingle()
-
-  if (existing) {
-    await supabase
-      .from('family_units')
-      .update({ parent_1_id: parent1Id, parent_2_id: parent2Id })
-      .eq('id', existing.family_unit_id)
-  } else {
-    const { data: unit, error } = await supabase
-      .from('family_units')
-      .insert({ parent_1_id: parent1Id, parent_2_id: parent2Id, organization_id: orgId })
-      .select('id')
-      .single()
-    if (!error && unit) {
-      await supabase
-        .from('family_unit_children')
-        .insert({ family_unit_id: unit.id, person_id: personId })
-    }
-  }
+  const { error } = await supabase.rpc('set_person_parents', {
+    p_person_id: personId, p_parent1_id: parent1Id, p_parent2_id: parent2Id,
+  })
+  if (error) return { error: 'Could not save parents. Please try again.' }
 
   revalidatePath(`/people/${personId}`)
   redirect(`/people/${personId}`)
@@ -123,12 +102,14 @@ export async function setPersonParents(personId: string, formData: FormData) {
 // Creates a new family unit where the given person is parent_1.
 export async function createFamilyUnitAsParent(personId: string, formData: FormData) {
   const { supabase, orgId } = await requireUser()
+  if (!orgId) return { error: 'No organization assigned to your account.' }
 
   const coParentId = (formData.get('coParentId') as string) || null
 
-  await supabase
+  const failure = await checkWrite(supabase
     .from('family_units')
-    .insert({ parent_1_id: personId, parent_2_id: coParentId, organization_id: orgId })
+    .insert({ parent_1_id: personId, parent_2_id: coParentId, organization_id: orgId }).select())
+  if (failure) return failure
 
   revalidatePath(`/people/${personId}`)
   redirect(`/people/${personId}`)
@@ -143,14 +124,12 @@ export async function addChildToUnit(
   const { supabase } = await requireUser()
 
   const childId = formData.get('childId') as string
-  if (!childId) {
-    revalidatePath(`/people/${personId}`)
-    redirect(`/people/${personId}`)
-  }
+  if (!childId) return { error: 'Choose a child to add.' }
 
-  await supabase
+  const failure = await checkWrite(supabase
     .from('family_unit_children')
-    .insert({ family_unit_id: unitId, person_id: childId })
+    .insert({ family_unit_id: unitId, person_id: childId }).select())
+  if (failure) return failure
 
   revalidatePath(`/people/${personId}`)
   revalidatePath(`/people/${childId}`)
@@ -161,15 +140,15 @@ export async function removeChildFromUnit(
   personId: string,
   unitId: string,
   childId: string,
-  _formData: FormData,
 ) {
   const { supabase } = await requireUser()
 
-  await supabase
+  const failure = await checkWrite(supabase
     .from('family_unit_children')
     .delete()
     .eq('family_unit_id', unitId)
-    .eq('person_id', childId)
+    .eq('person_id', childId).select())
+  if (failure) return failure
 
   revalidatePath(`/people/${personId}`)
   revalidatePath(`/people/${childId}`)
@@ -179,11 +158,11 @@ export async function removeChildFromUnit(
 export async function deleteFamilyUnit(
   personId: string,
   unitId: string,
-  _formData: FormData,
 ) {
   const { supabase } = await requireUser()
 
-  await supabase.from('family_units').delete().eq('id', unitId)
+  const failure = await checkWrite(supabase.from('family_units').delete().eq('id', unitId).select())
+  if (failure) return failure
 
   revalidatePath(`/people/${personId}`)
   redirect(`/people/${personId}`)

@@ -1,7 +1,7 @@
 'use client'
 
-import { useActionState } from 'react'
-import { Alert, Button, Card, Input, Label, Spinner, TextField } from '@heroui/react'
+import { ActionForm } from '@/app/_components/ActionForm'
+import { Button, Card, Input, Label, TextField } from '@heroui/react'
 import type { PersonFormState } from '../actions'
 
 type PersonDefaults = {
@@ -19,12 +19,12 @@ type Props = {
 }
 
 export function PersonForm({ action, defaultValues, submitLabel = 'Save' }: Props) {
-  const [state, formAction, pending] = useActionState(action, null)
+  const formAction = async (data: FormData) => (await action(null, data)) ?? undefined
 
   return (
     <Card className="w-full max-w-lg">
       <Card.Content>
-        <form action={formAction} className="flex flex-col gap-4">
+        <ActionForm action={formAction} className="flex flex-col gap-4">
           <TextField name="full_name" isRequired defaultValue={defaultValues?.full_name ?? ''}>
             <Label>Full name</Label>
             <Input placeholder="Jane Smith" variant="secondary" />
@@ -71,24 +71,8 @@ export function PersonForm({ action, defaultValues, submitLabel = 'Save' }: Prop
             />
           </TextField>
 
-          {state?.error && (
-            <Alert status="danger">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Description>{state.error}</Alert.Description>
-              </Alert.Content>
-            </Alert>
-          )}
-
-          <Button type="submit" className="self-start" isPending={pending}>
-            {({ isPending }) => (
-              <>
-                {isPending && <Spinner size="sm" color="current" />}
-                {isPending ? 'Saving…' : submitLabel}
-              </>
-            )}
-          </Button>
-        </form>
+          <Button type="submit" className="self-start">{submitLabel}</Button>
+        </ActionForm>
       </Card.Content>
     </Card>
   )

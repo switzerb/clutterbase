@@ -1,24 +1,22 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Card, Spinner } from '@heroui/react'
 import { createClient } from '@/lib/supabase/client'
+import { createUploadQueue, runUploadJob, uploadPath, type UploadJob } from '@/lib/upload-queue'
 import { registerItem } from './actions'
 
 type UploadState =
   | { state: 'pending' }
   | { state: 'uploading' }
-  | { state: 'success'; itemId: string }
+  | { state: 'success'; itemId: string; warning?: string }
   | { state: 'error'; message: string }
 
 type UploadEntry = {
   key: string
   file: File
+  job: UploadJob
   status: UploadState
-}
-
-function getExt(filename: string): string {
-  return filename.split('.').pop()?.toLowerCase() ?? 'bin'
 }
 
 function deriveTitle(filename: string): string {
@@ -29,11 +27,8 @@ function deriveTitle(filename: string): string {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function buildStoragePath(itemId: string, ext: string): string {
-  return `items/${itemId}/original.${ext}`
-}
-
 export default function UploadPage() {
+  const [queue] = useState(() => createUploadQueue(2))
   const [entries, setEntries] = useState<UploadEntry[]>([])
   const [dragging, setDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -42,49 +37,48 @@ export default function UploadPage() {
     setEntries(prev => prev.map(e => (e.key === key ? { ...e, status } : e)))
   }
 
-  async function uploadEntry(entry: UploadEntry) {
-    const { key, file } = entry
-    updateEntry(key, { state: 'uploading' })
-
-    try {
-      const itemId = crypto.randomUUID()
-      const ext = getExt(file.name)
-      const filePath = buildStoragePath(itemId, ext)
-      const title = deriveTitle(file.name)
-
-      const supabase = createClient()
-      const { error: storageError } = await supabase.storage
-        .from('originals')
-        .upload(filePath, file, { contentType: file.type })
-
-      if (storageError) {
-        updateEntry(key, { state: 'error', message: storageError.message })
-        return
-      }
-
-      const result = await registerItem(itemId, title, filePath, file.type)
-      if ('error' in result) {
-        updateEntry(key, { state: 'error', message: result.error })
-        return
-      }
-
-      updateEntry(key, { state: 'success', itemId: result.itemId })
-    } catch (err) {
-      updateEntry(key, {
-        state: 'error',
-        message: err instanceof Error ? err.message : 'Upload failed',
-      })
+  const hasUnfinished = entries.some(entry => entry.status.state !== 'success')
+  useEffect(() => {
+    if (!hasUnfinished) return
+    function warnBeforeLeaving(event: BeforeUnloadEvent) {
+      event.preventDefault()
+      event.returnValue = ''
     }
+    window.addEventListener('beforeunload', warnBeforeLeaving)
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving)
+  }, [hasUnfinished])
+
+  function schedule(entry: UploadEntry) {
+    updateEntry(entry.key, { state: 'pending' })
+    void queue.enqueue(entry.key, async () => {
+      updateEntry(entry.key, { state: 'uploading' })
+      try {
+        const supabase = createClient()
+        const result = await runUploadJob(entry.job, {
+          upload: job => supabase.storage.from('originals').upload(job.filePath, job.file, { contentType: job.file.type }),
+          register: job => registerItem(job.itemId, job.title, job.filePath, job.file.type),
+        })
+        updateEntry(entry.key, 'error' in result
+          ? { state: 'error', message: result.error }
+          : { state: 'success', itemId: result.itemId, warning: result.warning })
+      } catch {
+        updateEntry(entry.key, { state: 'error', message: 'Connection interrupted. Retry to continue this upload.' })
+      }
+    })
   }
 
   function addFiles(files: FileList | File[]) {
-    const newEntries: UploadEntry[] = Array.from(files).map(file => ({
-      key: crypto.randomUUID(),
-      file,
-      status: { state: 'pending' },
-    }))
+    const newEntries: UploadEntry[] = Array.from(files).map(file => {
+      const itemId = crypto.randomUUID()
+      return {
+        key: itemId,
+        file,
+        job: { itemId, file, filePath: uploadPath(itemId, file.name), title: deriveTitle(file.name) || file.name, uploaded: false },
+        status: { state: 'pending' },
+      }
+    })
     setEntries(prev => [...prev, ...newEntries])
-    newEntries.forEach(entry => uploadEntry(entry))
+    newEntries.forEach(schedule)
   }
 
   function handleDragOver(e: React.DragEvent) {
@@ -114,6 +108,7 @@ export default function UploadPage() {
   return (
     <main className="flex min-h-screen flex-col items-start p-8 gap-6 max-w-2xl mx-auto w-full">
       <h1 className="text-2xl font-semibold">Upload files</h1>
+      <p className="text-sm text-[var(--muted)]">Two files upload at a time. Keep this page open until uploads finish; retry any failed files here.</p>
 
       <Card className="w-full">
         <Card.Content>
@@ -156,6 +151,7 @@ export default function UploadPage() {
                 >
                   <span className="min-w-0 flex-1 truncate text-sm">{entry.file.name}</span>
                   <div className="flex shrink-0 items-center gap-2">
+                    {entry.status.state === 'pending' && <span className="text-xs text-[var(--muted)]">Queued</span>}
                     {entry.status.state === 'uploading' && (
                       <Spinner size="sm" color="current" />
                     )}
@@ -163,16 +159,17 @@ export default function UploadPage() {
                       <a
                         href={`/items/${entry.status.itemId}`}
                         className="text-xs text-[var(--success)]"
+                        title={entry.status.warning}
                       >
-                        Uploaded
+                        {entry.status.warning ? 'Uploaded (no thumbnail)' : 'Uploaded'}
                       </a>
                     )}
                     {entry.status.state === 'error' && (
                       <>
-                        <span className="max-w-[180px] truncate text-xs text-[var(--danger)]">
+                        <span role="alert" className="max-w-[240px] text-xs text-[var(--danger)]">
                           {entry.status.message}
                         </span>
-                        <Button variant="outline" onPress={() => uploadEntry(entry)}>
+                        <Button variant="outline" onPress={() => schedule(entry)}>
                           Retry
                         </Button>
                       </>

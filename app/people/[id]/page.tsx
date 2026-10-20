@@ -1,8 +1,9 @@
+import { ActionForm } from '@/app/_components/ActionForm'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Card } from '@heroui/react'
 import { createClient } from '@/lib/supabase/server'
-import { getSignedUrl } from '@/lib/storage'
+import { getSignedUrl, getThumbnailUrls } from '@/lib/storage'
 import {
   setPersonParents,
   createFamilyUnitAsParent,
@@ -64,19 +65,7 @@ export default async function PersonPage({ params }: { params: Params }) {
   }[]
   const allPeople = (allPeopleResult.data ?? []) as PersonRef[]
 
-  // Generate signed URLs for linked item thumbnails
-  const thumbnailUrls: Record<string, string> = {}
-  await Promise.all(
-    linkedItems
-      .filter(item => item.thumbnail_path)
-      .map(async item => {
-        try {
-          thumbnailUrls[item.id] = await getSignedUrl('thumbnails', item.thumbnail_path!)
-        } catch {
-          // skip — item displays without thumbnail
-        }
-      }),
-  )
+  const thumbnailUrls = await getThumbnailUrls(linkedItems)
 
   // Profile photo
   let avatarUrl: string | null = null
@@ -96,7 +85,6 @@ export default async function PersonPage({ params }: { params: Params }) {
   }
 
   const parentUnit = childOf?.family_units ?? null
-  const parentUnitId: string | null = childOf?.family_unit_id ?? null
 
   return (
     <main className="flex min-h-screen flex-col items-start gap-6 p-8 max-w-3xl mx-auto w-full">
@@ -131,14 +119,14 @@ export default async function PersonPage({ params }: { params: Params }) {
           >
             Edit
           </Link>
-          <form action={deletePerson.bind(null, id)}>
+          <ActionForm action={deletePerson.bind(null, id)}>
             <button
               type="submit"
               className="inline-flex items-center rounded-[var(--radius)] border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--danger)] transition-colors hover:bg-[var(--default)]"
             >
               Delete
             </button>
-          </form>
+          </ActionForm>
         </div>
       </div>
 
@@ -191,7 +179,7 @@ export default async function PersonPage({ params }: { params: Params }) {
               <summary className="cursor-pointer text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
                 {parentUnit ? 'Update parents…' : 'Record parents…'}
               </summary>
-              <form
+              <ActionForm
                 action={setPersonParents.bind(null, id)}
                 className="mt-3 flex flex-col gap-3"
               >
@@ -203,7 +191,7 @@ export default async function PersonPage({ params }: { params: Params }) {
                 >
                   Save parents
                 </button>
-              </form>
+              </ActionForm>
             </details>
           </Card.Content>
         </Card>
@@ -244,11 +232,11 @@ export default async function PersonPage({ params }: { params: Params }) {
                         'Single parent'
                       )}
                     </p>
-                    <form action={deleteFamilyUnit.bind(null, id, unit.id)}>
+                    <ActionForm action={deleteFamilyUnit.bind(null, id, unit.id)}>
                       <button type="submit" className="text-xs text-[var(--danger)] hover:underline">
                         Remove unit
                       </button>
-                    </form>
+                    </ActionForm>
                   </div>
 
                   {children.length > 0 ? (
@@ -258,11 +246,11 @@ export default async function PersonPage({ params }: { params: Params }) {
                           <Link href={`/people/${child.id}`} className="hover:underline">
                             {child.full_name}
                           </Link>
-                          <form action={removeChildFromUnit.bind(null, id, unit.id, child.id)}>
+                          <ActionForm action={removeChildFromUnit.bind(null, id, unit.id, child.id)}>
                             <button type="submit" className="text-xs text-[var(--muted)] hover:text-[var(--danger)]">
                               Remove
                             </button>
-                          </form>
+                          </ActionForm>
                         </li>
                       ))}
                     </ul>
@@ -274,7 +262,7 @@ export default async function PersonPage({ params }: { params: Params }) {
                     <summary className="cursor-pointer text-xs text-[var(--muted)] hover:text-[var(--foreground)]">
                       Add child…
                     </summary>
-                    <form
+                    <ActionForm
                       action={addChildToUnit.bind(null, id, unit.id)}
                       className="mt-2 flex gap-2"
                     >
@@ -291,7 +279,7 @@ export default async function PersonPage({ params }: { params: Params }) {
                       >
                         Add
                       </button>
-                    </form>
+                    </ActionForm>
                   </details>
                 </div>
               )
@@ -301,7 +289,7 @@ export default async function PersonPage({ params }: { params: Params }) {
               <summary className="cursor-pointer text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
                 New family unit…
               </summary>
-              <form
+              <ActionForm
                 action={createFamilyUnitAsParent.bind(null, id)}
                 className="mt-3 flex flex-col gap-3"
               >
@@ -312,7 +300,7 @@ export default async function PersonPage({ params }: { params: Params }) {
                 >
                   Create unit
                 </button>
-              </form>
+              </ActionForm>
             </details>
           </Card.Content>
         </Card>
@@ -330,6 +318,8 @@ export default async function PersonPage({ params }: { params: Params }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={thumbnailUrls[item.id]}
+                      loading="lazy"
+                      decoding="async"
                       alt={item.title}
                       className="size-full object-cover transition-opacity group-hover:opacity-90"
                     />

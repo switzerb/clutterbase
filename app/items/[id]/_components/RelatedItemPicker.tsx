@@ -1,5 +1,6 @@
 'use client'
 
+import { ActionForm } from '@/app/_components/ActionForm'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { addRelatedItem } from '../actions'
@@ -60,7 +61,7 @@ export function RelatedItemPicker({ currentItemId, excludeIds }: Props) {
     'w-full rounded-[var(--field-radius)] border border-[var(--border)] bg-[var(--field-background)] px-3 py-2 text-sm text-[var(--field-foreground)] placeholder:text-[var(--field-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]'
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <ActionForm action={action} className="flex flex-col gap-3">
       {selected ? (
         <>
           <input type="hidden" name="related_item_id" value={selected.id} />
@@ -114,6 +115,6 @@ export function RelatedItemPicker({ currentItemId, excludeIds }: Props) {
           )}
         </div>
       )}
-    </form>
+    </ActionForm>
   )
 }

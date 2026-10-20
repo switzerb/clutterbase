@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { ActionForm } from '@/app/_components/ActionForm'
 import { updateItem } from '../actions'
 
 type Props = {
@@ -21,11 +21,10 @@ export function ItemEditForm({
   currentDateYear,
   currentDatePrecision,
 }: Props) {
-  const [state, action] = useActionState(updateItem.bind(null, itemId), null)
+  const action = async (data: FormData) => (await updateItem(itemId, null, data)) ?? undefined
 
   return (
-    <form action={action} className="flex flex-col gap-3">
-      {state?.error && <p className="text-sm text-[var(--danger)]">{state.error}</p>}
+    <ActionForm action={action} className="flex flex-col gap-3">
 
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-[var(--muted)]">Title</label>
@@ -74,6 +73,6 @@ export function ItemEditForm({
       >
         Save changes
       </button>
-    </form>
+    </ActionForm>
   )
 }
