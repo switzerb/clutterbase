@@ -36,6 +36,9 @@ coverage
 __screenshots__/
 
 # Vite
+.wrangler/
+.dev.vars
+.dev.vars.*
 *.timestamp-*-*.mjs
 !.vscode/
 !.vscode/settings.json
