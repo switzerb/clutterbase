@@ -1,54 +1,51 @@
-# clutterbase
+# Clutterbase
 
-This template should help get you started developing with Vue 3 in Vite.
+## Local development
 
-## Recommended IDE Setup
+### Requirements
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- [Vite+](https://viteplus.dev/guide/) installed (`vp` command available).
+- A supported Node.js version: Node 24.12+ recommended. See `package.json` for the supported range.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or a compatible Docker runtime, running when using local Supabase.
 
-## Recommended Browser Setup
+Vite+ manages the project's pnpm version. The Supabase CLI is installed as a project dependency; no global install or hosted Supabase account is needed.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+### How to run locally
 
-## Type Support for `.vue` Imports in TS
+Run these commands from the project root.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+1. Install dependencies (also run after pulling dependency changes):
 
-## Customize configuration
+   ```sh
+   vp install
+   ```
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+2. With Docker running, start local Supabase:
 
-## Project Setup
+   ```sh
+   vp exec supabase start
+   ```
 
-```sh
-pnpm install
-```
+   The first run downloads Docker images and may take a few minutes.
 
-### Compile and Hot-Reload for Development
+   - Studio: http://127.0.0.1:54323
+   - API: http://127.0.0.1:54321
+   - Test email inbox: http://127.0.0.1:54324
 
-```sh
-pnpm dev
-```
+3. Start the Vue development server:
 
-### Type-Check, Compile and Minify for Production
+   ```sh
+   vp dev
+   ```
 
-```sh
-pnpm build
-```
+   Open http://localhost:5173/ (or the URL printed in the terminal). Changes reload automatically.
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+The current hello-world frontend does not yet connect to Supabase, so it can run without the backend. No environment variables are required yet.
 
-```sh
-pnpm test:unit
-```
-
-### Lint with [ESLint](https://eslint.org/)
+Press `Ctrl+C` to stop the frontend. Supabase runs independently in Docker; stop it with:
 
 ```sh
-pnpm lint
+vp exec supabase stop
 ```
+
+Local database data is preserved between normal stops and starts. To check service status and connection details, run `vp exec supabase status`; avoid sharing its secret keys.
