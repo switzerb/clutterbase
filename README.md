@@ -1,84 +1,53 @@
 # Clutterbase
 
-Clutterbase is a private family archive for photos, documents, people, and family history. It uses Next.js 16 App Router, React 19, HeroUI, Tailwind CSS, and Supabase Auth, Postgres, and Storage.
+Live site: [clutterbase.ing](https://clutterbase.ing/)
 
-See the [short feature overview](.working/features.md) for what is implemented and what is still missing.
+## Local development
 
-## Existing services
+### Requirements
 
-- App: https://clutterbase.vercel.app
-- Supabase API: https://hbshdkyfzefwskokwiyf.supabase.co
-- Supabase dashboard: https://supabase.com/dashboard/project/hbshdkyfzefwskokwiyf
-- Source: https://github.com/switzerb/clutterbase
+- [Vite+](https://viteplus.dev/guide/) installed (`vp` command available).
+- A supported Node.js version: Node 24.12+ recommended. See `package.json` for the supported range.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or a compatible Docker runtime, running when using local Supabase.
 
-See [launch status and next steps](.working/launch.md) for the Thanksgiving target and outstanding checks. The feature specifications live in [openspec/specs](openspec/specs); the archived foundation checklist records implementation history, not current acceptance-test results.
+Vite+ manages the project's pnpm version. The Supabase CLI is installed as a project dependency; no global install or hosted Supabase account is needed.
 
-## Run locally against the existing backend
+### How to run locally
 
-Use Node.js 24.22.0 LTS and pnpm 10.34.7. Node is pinned in `.tool-versions` (asdf) and `.node-version`; `package.json` selects Node 24 for Vercel and pins pnpm. With asdf, run `asdf install` first. Install the versions in the lockfile:
+Run these commands from the project root.
+
+1. Install dependencies (also run after pulling dependency changes):
+
+   ```sh
+   vp install
+   ```
+
+2. With Docker running, start local Supabase:
+
+   ```sh
+   vp exec supabase start
+   ```
+
+   The first run downloads Docker images and may take a few minutes.
+
+   - Studio: http://127.0.0.1:54323
+   - API: http://127.0.0.1:54321
+   - Test email inbox: http://127.0.0.1:54324
+
+3. Start the Vue development server:
+
+   ```sh
+   vp dev
+   ```
+
+   Open http://localhost:5173/ (or the URL printed in the terminal). Changes reload automatically.
+
+The current hello-world frontend does not yet connect to Supabase, so it can run without the backend. No environment variables are required yet.
+
+Press `Ctrl+C` to stop the frontend. Supabase runs independently in Docker; stop it with:
 
 ```sh
-pnpm install --frozen-lockfile
-cp .env.example .env.local
+vp exec supabase stop
 ```
 
-Skip the copy if `.env.local` already exists. Fill its values from the existing project's configuration:
-
-| Variable | Purpose |
-| --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project API URL; supplied in the example |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable client key from that same project |
-| `SUPABASE_SECRET_KEY` | Server-only secret key used for admin invitations and user management |
-
-The old `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` names remain fallbacks during migration; new values take precedence. See [authentication setup](docs/authentication.md) for rollout and email template configuration.
-
-Never commit real environment files or put the service-role key in a `NEXT_PUBLIC_` variable. `.env.local` is ignored by Git. A local app using the hosted backend reads and writes the existing archive; use disposable test records for smoke checks.
-
-```sh
-pnpm dev
-```
-
-Open http://localhost:3000. Signed-out requests should redirect to `/sign-in`. Restart the server after changing environment variables.
-
-For magic links, the hosted Supabase Auth redirect allowlist must include `http://localhost:3000/auth/callback`. Keep the production Site URL set to `https://clutterbase.vercel.app` and allow `https://clutterbase.vercel.app/auth/callback` as well. Use the same browser to request and open a magic link.
-
-An existing account needs `app_metadata.organization_id` matching a row in `organizations`. Admin accounts also need `app_metadata.role` set to `admin`. These are trusted server-managed fields, not user-editable metadata. Without an organization, signing in alone does not grant archive access. Reauthenticate after changing membership metadata.
-
-## Check and build
-
-```sh
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
-pnpm start
-```
-
-Run `start` after `build`, with the development server stopped or on a different port. `typecheck` generates Next.js route types before checking TypeScript. The build downloads Geist fonts from Google, so it needs network access. A passing build does not validate credentials, database migrations, or authenticated workflows.
-
-### Upgrade baseline as of October 20, 2026
-
-The app uses HeroUI 3.2.6, Supabase JS 2.118.0 / SSR 0.12.7, Next.js 16.4.2, React 19.3.1, Tailwind 4.3.3, and Sharp 0.35.5. Node 24 is the current LTS line supported by Vercel; Node 26 is still Current. pnpm stays on the latest 10.x patch to retain the existing lockfile/tooling line.
-
-TypeScript is held at 6.0.x because Next's TypeScript ESLint parser requires `<6.1`. ESLint is held at 9.39.5 because the React, import, and accessibility plugins bundled with Next do not declare support for ESLint 10. ESLint 9 is deprecated upstream; revisit this exception when those plugins support 10. Do not force incompatible peer dependencies just to clear an outdated-package report.
-
-## Hosting and database changes
-
-The existing frontend is on Vercel. Before deploying, confirm the existing project's Git repository, production branch, and environment configuration in its dashboard. Use the Next.js framework preset, repository root, pnpm lockfile, and the same three environment variable names above. Public environment variables are embedded at build time; changing them requires a new build.
-
-Validate a preview before promoting production. Preview and local writes still affect production data if their Supabase credentials point at the production project.
-
-The five ordered SQL migrations in [supabase/migrations](supabase/migrations) define the schema, row-level policies, private `originals` and `thumbnails` buckets, organizations, and grants. Compare the hosted migration history before applying any migration. Do not replay the initial migrations or reset the hosted database. Take a backup before schema or data changes.
-
-A separate fully local Supabase stack is not yet verified. Its configuration requires Docker and the Supabase CLI; it currently references an absent `supabase/seed.sql`, and its redirect URLs need alignment with the local callback. For now, the supported recovery path is a local Next.js frontend against the existing hosted backend.
-
-## Project layout
-
-- `app/`: gallery, item details, uploads, people, tags, sign-in, and admin routes and Server Actions.
-- `proxy.ts`: session refresh and route protection.
-- `lib/supabase/`: browser, server, privileged clients, and role/membership helpers.
-- `lib/storage.ts`: signed file URLs and Sharp thumbnail generation.
-- `supabase/migrations/`: database and storage definitions.
-- `openspec/specs/`: feature behavior specifications.
-
-Before changing Next.js code, read the installed guides in `node_modules/next/dist/docs/`, as required by [AGENTS.md](AGENTS.md).
+Local database data is preserved between normal stops and starts. To check service status and connection details, run `vp exec supabase status`; avoid sharing its secret keys.
