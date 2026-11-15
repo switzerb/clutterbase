@@ -1,0 +1,57 @@
+{
+  "browser": "Chrome/157.0.8103.51",
+  "viewport": "1366x1000",
+  "themes": {
+    "light": {
+      "normalBorder": "rgb(119, 130, 121)",
+      "errorBorder": "rgb(160, 53, 53)",
+      "borderToken": "rgb(119, 130, 121)",
+      "dangerToken": "rgb(160, 53, 53)",
+      "disabledBorder": "rgb(119, 130, 121)",
+      "disabledStyle": "dashed",
+      "selectBorder": "rgb(119, 130, 121)",
+      "invalidSelectBorder": "rgb(160, 53, 53)",
+      "disabledSelectBorder": "rgb(119, 130, 121)",
+      "focusStyle": "solid",
+      "focusWidth": "2px",
+      "focusColor": "rgb(128, 85, 48)",
+      "focusToken": "rgb(128, 85, 48)",
+      "errorStyle": "dashed",
+      "buttonHeight": 48.796875,
+      "reducedMotion": true,
+      "animation": "none",
+      "transition": "0s",
+      "hoverBorder": "rgb(37, 45, 40)"
+    },
+    "dark": {
+      "normalBorder": "rgb(133, 149, 137)",
+      "errorBorder": "rgb(255, 180, 172)",
+      "borderToken": "rgb(133, 149, 137)",
+      "dangerToken": "rgb(255, 180, 172)",
+      "disabledBorder": "rgb(133, 149, 137)",
+      "disabledStyle": "dashed",
+      "selectBorder": "rgb(133, 149, 137)",
+      "invalidSelectBorder": "rgb(255, 180, 172)",
+      "disabledSelectBorder": "rgb(133, 149, 137)",
+      "focusStyle": "solid",
+      "focusWidth": "2px",
+      "focusColor": "rgb(232, 185, 137)",
+      "focusToken": "rgb(232, 185, 137)",
+      "errorStyle": "dashed",
+      "buttonHeight": 48.796875,
+      "reducedMotion": true,
+      "animation": "none",
+      "transition": "0s",
+      "hoverBorder": "rgb(244, 242, 237)"
+    }
+  },
+  "checks": [
+    "Native select typeahead updates value",
+    "Enter activates button; disabled button and link do not activate",
+    "Dialog Tab and Shift+Tab wrap through slot controls; Escape returns focus",
+    "Both themes: default, error, disabled and keyboard focus computed styles",
+    "Disabled field hover preserves border",
+    "Reduced motion enabled; field has no animation or transition",
+    "Primary button at least 48px"
+  ]
+}
