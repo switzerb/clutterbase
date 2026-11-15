@@ -50,7 +50,7 @@ artifacts:
     requires: []
 
   - id: spec
-    generates: 'spec/**/*.md'
+    generates: 'specs/**/*.md'
     description: Detailed specs for the change
     template: spec.md
     instruction: |
@@ -161,7 +161,7 @@ artifacts:
 
       Specs should be testable - each scenario is a potential test case.
     requires:
-      - proposal
+      - product
 
   - id: design
     generates: design.md
@@ -263,7 +263,7 @@ artifacts:
 
       Reference specs for what needs to be built, design for how to build it.
     requires:
-      - specs
+      - spec
       - design
 
 apply:
