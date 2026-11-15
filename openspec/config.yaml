@@ -1,4 +1,4 @@
-schema: spec-driven
+schema: workflow
 
 # Project context (optional)
 # Add only constraints that should guide OpenSpec artifacts and workflows.
@@ -9,15 +9,14 @@ schema: spec-driven
 #     Designs and tasks must cover Windows, macOS, and Linux
 #     Write all artifacts in Spanish
 
-# Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  product:
+    - Keep product under 800 words
+    - Maintain a user-focused perspective
+  implementation:
+    - Each task will be represented by a single ticket, focus on clear boundaries
+    - When a task can be handled in parallel with other tasks, indicate that
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.

@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "skills": {
+    "ticket-writer": {
+      "source": "switzerb/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ticket-writer/SKILL.md",
+      "computedHash": "07fe4963213f557c1d97a456e5f7a0fe152ead580603c9c8c6dd0f0d6726c2df"
+    },
+    "wtf": {
+      "source": "switzerb/skills",
+      "sourceType": "github",
+      "skillPath": "skills/wtf/SKILL.md",
+      "computedHash": "6596e1a6329826a4b14e73fd0875b1790655ab35d330a1d006fad99fb5b7e355"
+    }
+  }
+}

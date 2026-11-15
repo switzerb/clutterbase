@@ -1,5 +1,6 @@
 # Clutterbase
 
+Clutterbase is a private family archive, centered on people, historical material, and their stories.
 Live site: [clutterbase.ing](https://clutterbase.ing/)
 
 ## Local development
