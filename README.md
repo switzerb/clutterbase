@@ -43,7 +43,9 @@ Run these commands from the project root.
 
    Open http://localhost:5173/ (or the URL printed in the terminal). Changes reload automatically.
 
-The current hello-world frontend does not yet connect to Supabase, so it can run without the backend. No environment variables are required yet.
+The current visual foundation preview does not yet connect to Supabase, so it can run without the backend. No environment variables are required yet.
+
+See [interface foundations](docs/interface-foundations.md) for semantic tokens, branding, typography, theme examples, and verification.
 
 Press `Ctrl+C` to stop the frontend. Supabase runs independently in Docker; stop it with:
 

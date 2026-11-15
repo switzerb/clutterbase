@@ -1,1 +1,45 @@
 @import 'tailwindcss';
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --color-canvas: light-dark(#ffffff, #171c19);
+  --color-surface: light-dark(#f4f2ed, #232c26);
+  --color-surface-raised: light-dark(#ffffff, #2c372f);
+  --color-foreground: light-dark(#252d28, #f4f2ed);
+  --color-muted: light-dark(#59645c, #b9c4ba);
+  --color-border: light-dark(#778279, #859589);
+  --color-accent: light-dark(#365e49, #b4d2bc);
+  --color-accent-hover: light-dark(#294b39, #cee4d3);
+  --color-on-accent: light-dark(#ffffff, #172b1e);
+  --color-focus: light-dark(#805530, #e8b989);
+  --color-success: light-dark(#326044, #add5b8);
+  --color-warning: light-dark(#79501f, #edc58c);
+  --color-danger: light-dark(#a03535, #ffb4ac);
+  --color-info: light-dark(#365b7b, #aecfe9);
+  --color-overlay: light-dark(#171c1980, #00000099);
+
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.6;
+  --spacing-control: 3rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+    background: var(--color-canvas);
+  }
+
+  body {
+    margin: 0;
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+  }
+}

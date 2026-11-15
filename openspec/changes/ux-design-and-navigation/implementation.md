@@ -1,6 +1,6 @@
 # Implementation
 
-Approved and published to GitHub. All implementation work remains not started.
+Approved and published to GitHub. D1 is implemented and verified, awaiting review. D2–D13 remain not started.
 
 All thirteen issues belong to **UX Design and Navigation**, GitHub milestone 1:
 https://github.com/switzerb/clutterbase/milestone/1
@@ -13,7 +13,7 @@ The original drafts were split without changing scope: old D2 becomes D2/D3; old
 
 ## 1. Branding and shared controls
 
-- [ ] 1.1 D1 — Establish branding and adaptive themes; verify documented tokens, contrast measurements, both system appearances, and baseline typography.
+- [x] 1.1 D1 — Establish branding and adaptive themes; verify documented tokens, contrast measurements, both system appearances, and baseline typography.
 - [ ] 1.2 D2 — Create shared interactive controls; verify keyboard/component tests, validation associations, and documented control examples.
 - [ ] 1.3 D3 — Create shared status and feedback components; verify accessible state examples, reduced motion, and persistent-feedback tests.
 
