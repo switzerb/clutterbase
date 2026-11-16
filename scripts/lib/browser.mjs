@@ -44,8 +44,12 @@ export async function openBrowser() {
     await once(socket, 'open')
     let id = 0
     const pending = new Map()
+    const listeners = new Set()
     socket.addEventListener('message', ({ data }) => {
       const message = JSON.parse(data)
+      if (message.method) {
+        for (const listener of listeners) listener(message)
+      }
       const request = pending.get(message.id)
       if (!request) return
       pending.delete(message.id)
@@ -71,7 +75,16 @@ export async function openBrowser() {
       return result.result.value
     }
     await command('Page.enable')
-    return { command, evaluate, version: () => send('Browser.getVersion'), close }
+    return {
+      command,
+      evaluate,
+      onEvent: (listener) => {
+        listeners.add(listener)
+        return () => listeners.delete(listener)
+      },
+      version: () => send('Browser.getVersion'),
+      close,
+    }
   } catch (error) {
     await close()
     throw error
