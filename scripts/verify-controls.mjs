@@ -88,7 +88,23 @@ try {
     deviceScaleFactor: 1,
     mobile: false,
   })
+  const loaded = new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      socket.removeEventListener('message', listener)
+      reject(new Error('Controls fixture page load timed out'))
+    }, 10000)
+    function listener({ data }) {
+      const message = JSON.parse(data)
+      if (message.sessionId === sessionId && message.method === 'Page.loadEventFired') {
+        clearTimeout(timeout)
+        socket.removeEventListener('message', listener)
+        resolve()
+      }
+    }
+    socket.addEventListener('message', listener)
+  })
   await command('Page.navigate', { url: `${origin}/scripts/fixtures/controls.html` })
+  await loaded
   await evaluate(`new Promise((resolve, reject) => {
     const start = Date.now();
     const check = () => document.querySelector('#sort') ? resolve(true) :
