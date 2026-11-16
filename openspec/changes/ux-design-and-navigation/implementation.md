@@ -1,6 +1,6 @@
 # Implementation
 
-Approved and published to GitHub. D1 and D2 are implemented and verified, awaiting review. D4 is in progress; D3 and D5–D13 remain not started.
+Approved and published to GitHub. D1, D2, and D4 are implemented and verified, awaiting review. D3 and D5–D13 remain not started.
 
 All thirteen issues belong to **UX Design and Navigation**, GitHub milestone 1:
 https://github.com/switzerb/clutterbase/milestone/1
@@ -113,7 +113,7 @@ Give relatives consistent explanations of what is happening and what they can do
 
 ## 2. Navigation foundations
 
-- [ ] 2.1 D4 — Build the shared shell and route foundations; verify navigation, direct route loading, not-found views, document titles, and keyboard route transitions.
+- [x] 2.1 D4 — Build the shared shell and route foundations; verify navigation, direct route loading, not-found views, document titles, and keyboard route transitions.
 
 ### D4 — [#6](https://github.com/switzerb/clutterbase/issues/6)
 

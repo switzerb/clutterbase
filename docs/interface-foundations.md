@@ -1,6 +1,6 @@
 # Interface foundations
 
-Issue [#3](https://github.com/switzerb/clutterbase/issues/3) establishes the visual foundation only. The current page is a temporary theme example, not the archive home or navigation implementation. Shared controls and status components belong to subsequent tickets.
+Issue [#3](https://github.com/switzerb/clutterbase/issues/3) established the visual foundation. Its temporary theme example has since been replaced by the navigation shell; the screenshots below preserve the original evidence.
 
 ## Appearance and semantic tokens
 
@@ -92,6 +92,6 @@ In a second terminal, from the repository root:
 vp node scripts/verify-theme.mjs
 ```
 
-The dependency-free script uses the installed Google Chrome on macOS and a temporary, isolated profile that it cleans up. Override `CHROME_PATH` for another Chrome/Chromium location or `PREVIEW_URL` for another preview address. It rewrites the screenshots and JSON record; inspect their diffs before committing. It does not require Playwright or a browser-testing dependency.
+The dependency-free script uses the installed Google Chrome on macOS and a temporary, isolated profile that it cleans up. Override `CHROME_PATH` for another Chrome/Chromium location or `PREVIEW_URL` for another preview address. It injects the public-safe sample artwork into the current shell and writes new screenshots and a JSON record under `docs/navigation-evidence/`, leaving the original evidence untouched. It does not require Playwright or a browser-testing dependency.
 
-For interactive review, open the preview, switch system appearance (or use browser `prefers-color-scheme` emulation) while it remains open, and inspect the canvas, text, image, and dialog. Tab to Open dialog, press Enter, then Escape; confirm visible focus returns to its trigger. The Vue tests retain dialog labeling, close-button, and Escape coverage.
+For interactive review, open the prototype, switch system appearance (or use browser `prefers-color-scheme` emulation) while it remains open, and inspect the canvas, text, and navigation. The former dialog was part of the historical example. See [navigation](navigation.md) for current route checks.

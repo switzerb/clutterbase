@@ -1,69 +1,89 @@
-import { afterEach, describe, it, expect } from 'vite-plus/test'
-
-import { flushPromises, mount } from '@vue/test-utils'
-import type { VueWrapper } from '@vue/test-utils'
+import { afterEach, describe, expect, it } from 'vite-plus/test'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
+import { createMemoryHistory } from 'vue-router'
 import App from '../App.vue'
+import { createAppRouter } from '../router'
 
-describe('App', () => {
+describe('navigation shell', () => {
   let wrapper: VueWrapper | undefined
-
   afterEach(() => {
     wrapper?.unmount()
     wrapper = undefined
   })
 
-  it('renders the branded foundation preview without a manual theme control', () => {
-    wrapper = mount(App)
-    expect(wrapper.get('h1').text()).toBe('Family material, thoughtfully kept.')
-    expect(wrapper.get('p').text()).toBe('Clutterbase.')
-    expect(wrapper.get('p span').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.text()).toContain('Archive browsing is coming next.')
-    expect(wrapper.findAll('button')).toHaveLength(1)
-    expect(wrapper.find('input, select, [role="switch"]').exists()).toBe(false)
-    expect(wrapper.get('button').text()).toBe('Open dialog')
-    expect(document.querySelector('[role="dialog"]')).toBeNull()
+  async function open(path: string) {
+    const router = createAppRouter(createMemoryHistory())
+    await router.push(path)
+    await router.isReady()
+    wrapper = mount(App, { attachTo: document.body, global: { plugins: [router] } })
+    await flushPromises()
+    return router
+  }
+
+  it('opens Archive with a skip link, main landmark and current destination', async () => {
+    await open('/')
+    expect(wrapper!.get('main h1').text()).toBe('Archive')
+    expect(wrapper!.get('a[href="#main"]').text()).toBe('Skip to main content')
+    expect(wrapper!.get('nav a[aria-current="page"]').text()).toBe('Archive')
+    expect(document.title).toBe('Archive · Clutterbase')
   })
 
-  it('uses semantic colors and leaves the synthetic artwork unfiltered', () => {
-    wrapper = mount(App)
-    expect(wrapper.get('main').classes()).toContain('bg-canvas')
-    expect(wrapper.get('button').classes()).toContain('min-h-control')
-    expect(wrapper.get('button').classes()).toContain('text-on-accent')
-    expect(wrapper.get('img').attributes('alt')).toContain('Synthetic sample letter')
-    expect(wrapper.get('img').attributes('style')).toBeUndefined()
-    expect(wrapper.get('img').classes()).not.toContain('invert')
+  it('updates current destination, title and heading focus on navigation', async () => {
+    const router = await open('/')
+    await router.push('/family')
+    await flushPromises()
+    expect(wrapper!.get('nav a[aria-current="page"]').text()).toBe('Family')
+    expect(document.title).toBe('Family · Clutterbase')
+    expect(document.activeElement).toBe(wrapper!.get('h1').element)
+    await router.push('/upload')
+    await flushPromises()
+    expect(wrapper!.get('nav a[aria-current="page"]').text()).toBe('Upload files')
   })
 
-  it('opens a labelled dialog and closes it with its button', async () => {
-    wrapper = mount(App, { attachTo: document.body })
-    await wrapper.get('button').trigger('click')
-    await flushPromises()
-
-    const dialog = document.querySelector('[role="dialog"]')
-    expect(dialog).not.toBeNull()
-    const titleId = dialog?.getAttribute('aria-labelledby')
-    const descriptionId = dialog?.getAttribute('aria-describedby')
-    expect(titleId).toBeTruthy()
-    expect(descriptionId).toBeTruthy()
-    expect(document.getElementById(titleId ?? '')?.textContent).toBe('Hello from Reka UI')
-    expect(document.getElementById(descriptionId ?? '')?.textContent).toContain('focus management')
-
-    const closeButton = dialog?.querySelector('button')
-    expect(closeButton?.textContent?.trim()).toBe('Close dialog')
-    closeButton?.click()
-    await flushPromises()
-    expect(document.querySelector('[role="dialog"]')).toBeNull()
+  it.each([
+    ['/archive/sample-item', 'Sample item', 'Archive'],
+    ['/archive/sample-item/', 'Sample item', 'Archive'],
+    ['/archive/sample-item/extra', 'Page not found', null],
+    ['/archive/missing', 'Item not found', 'Archive'],
+    ['/missing', 'Page not found', null],
+  ])('handles direct route %s', async (path, heading, current) => {
+    await open(path!)
+    expect(wrapper!.get('h1').text()).toBe(heading)
+    expect(document.title).toBe(`${heading} · Clutterbase`)
+    const active = wrapper!.find('nav a[aria-current="page"]')
+    expect(active.exists() ? active.text() : null).toBe(current)
+    expect(wrapper!.find('main a[href="/"]').exists()).toBe(true)
   })
 
-  it('closes the dialog with Escape', async () => {
-    wrapper = mount(App, { attachTo: document.body })
-    await wrapper.get('button').trigger('click')
-    await flushPromises()
+  it.each([
+    ['/inbox', 'Inbox', 'prototype placeholder'],
+    ['/upload', 'Upload files', 'does not transfer files'],
+  ])('loads %s directly with its title and placeholder', async (path, heading, placeholder) => {
+    await open(path)
+    expect(wrapper!.get('h1').text()).toBe(heading)
+    expect(wrapper!.get('main').text()).toContain(placeholder)
+    expect(document.title).toBe(`${heading} · Clutterbase`)
+  })
 
-    expect(document.querySelector('[role="dialog"]')).not.toBeNull()
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+  it('does not change focus or input on query-only navigation', async () => {
+    const router = await open('/')
+    const input = document.createElement('input')
+    input.value = 'kept text'
+    wrapper!.get('main').element.append(input)
+    input.focus()
+    await router.push('/?q=example')
     await flushPromises()
+    expect(document.activeElement).toBe(input)
+    expect(input.value).toBe('kept text')
+    input.remove()
+  })
 
-    expect(document.querySelector('[role="dialog"]')).toBeNull()
+  it('updates title and focus when a missing item changes to the known item', async () => {
+    const router = await open('/archive/missing')
+    await router.push('/archive/sample-item')
+    await flushPromises()
+    expect(wrapper!.get('h1').text()).toBe('Sample item')
+    expect(document.title).toBe('Sample item · Clutterbase')
+    expect(document.activeElement).toBe(wrapper!.get('h1').element)
   })
 })

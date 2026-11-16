@@ -1,0 +1,47 @@
+{
+  "browser": "Chrome/157.0.8103.51",
+  "viewport": "1366x768",
+  "themes": {
+    "light": {
+      "background": "rgb(255, 255, 255)",
+      "fontSize": "18px",
+      "buttonHeight": 48,
+      "imageFilter": "none",
+      "imageBlend": "normal",
+      "focusOutline": "solid",
+      "focusWidth": "2px",
+      "imageClip": {
+        "x": 151,
+        "y": 197.796875,
+        "width": 456,
+        "height": 136,
+        "scale": 1
+      },
+      "overflow": false
+    },
+    "dark": {
+      "background": "rgb(23, 28, 25)",
+      "fontSize": "18px",
+      "buttonHeight": 48,
+      "imageFilter": "none",
+      "imageBlend": "normal",
+      "focusOutline": "solid",
+      "focusWidth": "2px",
+      "imageClip": {
+        "x": 151,
+        "y": 197.796875,
+        "width": 456,
+        "height": 136,
+        "scale": 1
+      },
+      "overflow": false
+    }
+  },
+  "checks": [
+    "Live light → dark change without reload",
+    "Identical artwork pixels in both themes",
+    "18px body; ≥48px action",
+    "Keyboard Tab reaches the action with a visible 2px focus outline in both themes",
+    "No horizontal overflow at 1366, 683, or 320 CSS px"
+  ]
+}
