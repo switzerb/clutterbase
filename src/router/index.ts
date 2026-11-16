@@ -4,6 +4,7 @@ import ArchiveView from '../views/ArchiveView.vue'
 import ItemView from '../views/ItemView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import InboxView from '../views/InboxView.vue'
+import FamilyView from '../views/FamilyView.vue'
 
 export function createAppRouter(
   history: RouterHistory = createWebHistory(import.meta.env.BASE_URL),
@@ -19,7 +20,7 @@ export function createAppRouter(
       },
       {
         path: '/family',
-        component: DestinationView,
+        component: FamilyView,
         meta: { title: 'Family', destination: 'family' },
       },
       {
