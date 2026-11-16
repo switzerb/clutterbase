@@ -56,14 +56,17 @@ describe('navigation shell', () => {
   })
 
   it.each([
-    ['/inbox', 'Inbox', 'prototype placeholder'],
+    ['/inbox', 'Inbox', 'review statuses are synthetic examples'],
     ['/upload', 'Upload files', 'does not transfer files'],
-  ])('loads %s directly with its title and placeholder', async (path, heading, placeholder) => {
-    await open(path)
-    expect(wrapper!.get('h1').text()).toBe(heading)
-    expect(wrapper!.get('main').text()).toContain(placeholder)
-    expect(document.title).toBe(`${heading} · Clutterbase`)
-  })
+  ])(
+    'loads %s directly with its title and demo explanation',
+    async (path, heading, placeholder) => {
+      await open(path)
+      expect(wrapper!.get('h1').text()).toBe(heading)
+      expect(wrapper!.get('main').text()).toContain(placeholder)
+      expect(document.title).toBe(`${heading} · Clutterbase`)
+    },
+  )
 
   it('does not change focus or input on query-only navigation', async () => {
     const router = await open('/')
