@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800">
+  <rect x="3" y="3" width="594" height="794" fill="#fffdf6" stroke="#c4b9a7" stroke-width="6"/>
+  <text x="65" y="100" font-family="serif" font-size="28" fill="#52483d">A little note</text>
+  <g stroke="#aaa095" stroke-width="5">
+    <path d="M65 160h465 M65 205h430 M65 250h465 M65 295h390"/>
+    <path d="M65 380h465 M65 425h440 M65 470h465 M65 515h335"/>
+  </g>
+  <text x="65" y="650" font-family="serif" font-size="25" fill="#52483d">With warm wishes</text>
+</svg>
