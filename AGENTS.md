@@ -8,6 +8,10 @@ Use `.working/roadmap.md` to select the next milestone. Work through one milesto
 4. **Track in GitHub:** Publish approved tickets to GitHub and use GitHub to track the milestone's work.
 5. **Implement and verify:** Implement the agreed work and verify the milestone is complete before moving to the next milestone.
 
+## Documentation
+
+Use OpenSpec for requirements, decisions, and implementation context. Do not generate a parallel catalog in `docs/`. Keep screenshots and verification reports in ignored local artifacts. Defer additional human-facing documentation until requested; write it around a reader's task rather than an inventory of the code.
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

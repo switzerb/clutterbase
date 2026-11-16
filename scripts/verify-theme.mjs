@@ -1,4 +1,5 @@
 // Dependency-free real-browser check. Start `vp run preview` before running this file.
+// Screenshots and results are local artifacts under .working/verification/navigation/.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
@@ -73,7 +74,23 @@ try {
     deviceScaleFactor: 1,
     mobile: false,
   })
+  const loaded = new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      socket.removeEventListener('message', listener)
+      reject(new Error('Page load timed out'))
+    }, 10000)
+    function listener({ data }) {
+      const message = JSON.parse(data)
+      if (message.sessionId === sessionId && message.method === 'Page.loadEventFired') {
+        clearTimeout(timeout)
+        socket.removeEventListener('message', listener)
+        resolve()
+      }
+    }
+    socket.addEventListener('message', listener)
+  })
   await command('Page.navigate', { url: origin })
+  await loaded
   // Wait on actual page resources, not a fixed artificial delay.
   await evaluate(`new Promise(resolve => {
     const ready = async () => {
@@ -84,25 +101,37 @@ try {
     if (document.readyState === 'complete') ready();
     else window.addEventListener('load', ready, { once: true });
   })`)
-  await mkdir('docs/design', { recursive: true })
+  await mkdir('.working/verification/navigation', { recursive: true })
+  // The former preview no longer exists. Inject only its public-safe artwork as a
+  // browser fixture, so theme pixel coverage remains independent of route content.
+  await evaluate(`(async () => {
+    const img = document.createElement('img');
+    img.src = '/theme-sample.svg'; img.alt = 'Synthetic theme verification artwork';
+    img.width = 480; img.height = 160; img.style.maxWidth = '100%';
+    document.querySelector('main').append(img); await img.decode();
+  })()`)
   const evidence = {
     browser: (await send('Browser.getVersion')).product,
     viewport: '1366x768',
     themes: {},
   }
-  await command('Input.dispatchKeyEvent', {
-    type: 'keyDown',
-    key: 'Tab',
-    code: 'Tab',
-    windowsVirtualKeyCode: 9,
-  })
-  await command('Input.dispatchKeyEvent', {
-    type: 'keyUp',
-    key: 'Tab',
-    code: 'Tab',
-    windowsVirtualKeyCode: 9,
-  })
-  assert.equal(await evaluate("document.activeElement === document.querySelector('button')"), true)
+  // Tab through the shell to the prominent action rather than assuming a button.
+  await evaluate('document.body.tabIndex = -1; document.body.focus()')
+  for (let i = 0; i < 6; i++) {
+    await command('Input.dispatchKeyEvent', {
+      type: 'keyDown',
+      key: 'Tab',
+      code: 'Tab',
+      windowsVirtualKeyCode: 9,
+    })
+    await command('Input.dispatchKeyEvent', {
+      type: 'keyUp',
+      key: 'Tab',
+      code: 'Tab',
+      windowsVirtualKeyCode: 9,
+    })
+  }
+  assert.equal(await evaluate('document.activeElement.textContent.trim()'), 'Upload files')
   let originalImage
   for (const theme of ['light', 'dark']) {
     await command('Emulation.setEmulatedMedia', {
@@ -113,7 +142,7 @@ try {
     )
     const result = await evaluate(`(() => {
       const style = getComputedStyle(document.body);
-      const button = document.querySelector('button');
+      const button = document.querySelector('nav a[href="/upload"]');
       const image = document.querySelector('img');
       const rect = image.getBoundingClientRect();
       return {
@@ -141,7 +170,10 @@ try {
       assert.equal(image.data, originalImage, 'Artwork pixels must not change with appearance')
     originalImage = image.data
     const screenshot = await command('Page.captureScreenshot')
-    await writeFile(`docs/design/${theme}.png`, Buffer.from(screenshot.data, 'base64'))
+    await writeFile(
+      `.working/verification/navigation/theme-${theme}.png`,
+      Buffer.from(screenshot.data, 'base64'),
+    )
     evidence.themes[theme] = result
   }
   for (const width of [683, 320]) {
@@ -160,7 +192,10 @@ try {
     'Keyboard Tab reaches the action with a visible 2px focus outline in both themes',
     'No horizontal overflow at 1366, 683, or 320 CSS px',
   ]
-  await writeFile('docs/design/verification.json', `${JSON.stringify(evidence, null, 2)}\n`)
+  await writeFile(
+    '.working/verification/navigation/theme-verification.json',
+    `${JSON.stringify(evidence, null, 2)}\n`,
+  )
   console.log(JSON.stringify(evidence, null, 2))
 } finally {
   socket?.close()

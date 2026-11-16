@@ -1,8 +1,34 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouterHistory } from 'vue-router'
+import DestinationView from '../views/DestinationView.vue'
+import ItemView from '../views/ItemView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [],
-})
+export function createAppRouter(
+  history: RouterHistory = createWebHistory(import.meta.env.BASE_URL),
+) {
+  return createRouter({
+    history,
+    routes: [
+      { path: '/', component: DestinationView, meta: { title: 'Archive', destination: 'archive' } },
+      {
+        path: '/inbox',
+        component: DestinationView,
+        meta: { title: 'Inbox', destination: 'inbox' },
+      },
+      {
+        path: '/family',
+        component: DestinationView,
+        meta: { title: 'Family', destination: 'family' },
+      },
+      {
+        path: '/upload',
+        component: DestinationView,
+        meta: { title: 'Upload files', destination: 'upload' },
+      },
+      { path: '/archive/:id', name: 'item', component: ItemView, meta: { destination: 'archive' } },
+      { path: '/:pathMatch(.*)*', component: NotFoundView },
+    ],
+  })
+}
 
-export default router
+export default createAppRouter()
