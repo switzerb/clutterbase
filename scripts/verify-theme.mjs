@@ -1,4 +1,5 @@
 // Dependency-free real-browser check. Start `vp run preview` before running this file.
+// Screenshots and results are local artifacts under .working/verification/navigation/.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
@@ -100,7 +101,7 @@ try {
     if (document.readyState === 'complete') ready();
     else window.addEventListener('load', ready, { once: true });
   })`)
-  await mkdir('docs/navigation-evidence', { recursive: true })
+  await mkdir('.working/verification/navigation', { recursive: true })
   // The former preview no longer exists. Inject only its public-safe artwork as a
   // browser fixture, so theme pixel coverage remains independent of route content.
   await evaluate(`(async () => {
@@ -170,7 +171,7 @@ try {
     originalImage = image.data
     const screenshot = await command('Page.captureScreenshot')
     await writeFile(
-      `docs/navigation-evidence/theme-${theme}.png`,
+      `.working/verification/navigation/theme-${theme}.png`,
       Buffer.from(screenshot.data, 'base64'),
     )
     evidence.themes[theme] = result
@@ -192,7 +193,7 @@ try {
     'No horizontal overflow at 1366, 683, or 320 CSS px',
   ]
   await writeFile(
-    'docs/navigation-evidence/theme-verification.json',
+    '.working/verification/navigation/theme-verification.json',
     `${JSON.stringify(evidence, null, 2)}\n`,
   )
   console.log(JSON.stringify(evidence, null, 2))

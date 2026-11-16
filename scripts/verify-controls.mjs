@@ -1,4 +1,5 @@
 // Start `vp dev --host 127.0.0.1 --port 5174 --strictPort` first.
+// Screenshots and results are local artifacts under .working/verification/controls/.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
@@ -100,7 +101,7 @@ try {
     themes: {},
     checks: [],
   }
-  await mkdir('docs/controls', { recursive: true })
+  await mkdir('.working/verification/controls', { recursive: true })
 
   // Native keyboard interaction, not synthetic change or click events.
   await evaluate("document.querySelector('#sort').focus()")
@@ -228,7 +229,10 @@ try {
     assert.notEqual(result.hoverBorder, result.borderToken)
     await evaluate("document.querySelector('#action').scrollIntoView({block:'start'})")
     const screenshot = await command('Page.captureScreenshot')
-    await writeFile(`docs/controls/${theme}.png`, Buffer.from(screenshot.data, 'base64'))
+    await writeFile(
+      `.working/verification/controls/${theme}.png`,
+      Buffer.from(screenshot.data, 'base64'),
+    )
     evidence.themes[theme] = result
   }
   evidence.checks.push(
@@ -237,7 +241,10 @@ try {
     'Reduced motion enabled; field has no animation or transition',
     'Primary button at least 48px',
   )
-  await writeFile('docs/controls/verification.json', `${JSON.stringify(evidence, null, 2)}\n`)
+  await writeFile(
+    '.working/verification/controls/verification.json',
+    `${JSON.stringify(evidence, null, 2)}\n`,
+  )
   console.log(JSON.stringify(evidence, null, 2))
 } finally {
   socket?.close()

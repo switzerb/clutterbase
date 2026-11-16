@@ -1,4 +1,5 @@
 // Dependency-free real-browser check. Start `vp run preview` before running this file.
+// Results are local artifacts under .working/verification/navigation/.
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
@@ -230,9 +231,9 @@ try {
     },
     appearances,
   }
-  await mkdir('docs/navigation-evidence', { recursive: true })
+  await mkdir('.working/verification/navigation', { recursive: true })
   await writeFile(
-    'docs/navigation-evidence/navigation-verification.json',
+    '.working/verification/navigation/navigation-verification.json',
     `${JSON.stringify(evidence, null, 2)}\n`,
   )
   console.log(JSON.stringify(evidence, null, 2))

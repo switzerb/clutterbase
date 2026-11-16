@@ -45,9 +45,6 @@ Run these commands from the project root.
 
 The current navigation prototype does not yet connect to Supabase, so it can run without the backend. No environment variables are required yet.
 
-See [interface foundations](docs/interface-foundations.md) for semantic tokens, branding, typography, theme examples, and verification.
-See [navigation](docs/navigation.md) for routes and browser checks.
-
 Press `Ctrl+C` to stop the frontend. Supabase runs independently in Docker; stop it with:
 
 ```sh
