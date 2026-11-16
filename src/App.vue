@@ -12,40 +12,59 @@ import {
 </script>
 
 <template>
-  <main class="grid min-h-dvh place-items-center bg-slate-50 px-6 py-12 text-slate-900 antialiased">
-    <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:p-12">
-      <p class="text-sm font-semibold tracking-wide text-teal-700">Clutterbase</p>
-      <h1 class="mt-3 text-4xl font-semibold tracking-tight">Hello, Clutterbase.</h1>
-      <p class="mt-4 leading-relaxed text-slate-600">
-        A small beginning, built with Vue, Reka UI, and Tailwind CSS.
+  <main class="min-h-dvh bg-canvas px-5 py-8 text-foreground antialiased sm:px-8">
+    <div class="mx-auto w-full max-w-2xl">
+      <p class="text-2xl font-semibold tracking-tight text-accent">
+        Clutterbase<span aria-hidden="true" class="text-focus">.</span>
       </p>
+      <section class="mt-8 rounded-xl border border-border bg-surface p-5 sm:p-8">
+        <h1 class="text-3xl font-semibold tracking-tight">Family material, thoughtfully kept.</h1>
+        <p class="mt-4 text-muted">
+          A quiet place for photographs, letters, and the stories behind them.
+        </p>
+        <p class="mt-4 text-muted">
+          This is a visual foundation preview. Archive browsing is coming next.
+        </p>
+        <figure class="mt-6">
+          <img
+            src="/theme-sample.svg"
+            alt="Synthetic sample letter with a terracotta stamp and evergreen signature"
+            width="480"
+            height="160"
+            class="h-auto w-full rounded-lg"
+          />
+          <figcaption class="mt-2 text-muted">
+            Sample artwork keeps its original colors in either appearance.
+          </figcaption>
+        </figure>
 
-      <DialogRoot>
-        <DialogTrigger
-          class="mt-8 inline-flex cursor-pointer items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 font-medium text-white hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700"
-        >
-          Open dialog
-        </DialogTrigger>
-        <DialogPortal>
-          <DialogOverlay class="fixed inset-0 z-10 bg-slate-950/50" />
-          <DialogContent
-            class="fixed top-1/2 left-1/2 z-20 max-h-[calc(100dvh-3rem)] w-[calc(100%-3rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl bg-white p-8 text-slate-900 shadow-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700"
+        <DialogRoot>
+          <DialogTrigger
+            class="mt-6 inline-flex min-h-control cursor-pointer items-center justify-center rounded-lg bg-accent px-5 py-3 font-medium text-on-accent hover:bg-accent-hover"
           >
-            <DialogTitle class="text-2xl font-semibold tracking-tight"
-              >Hello from Reka UI</DialogTitle
+            Open dialog
+          </DialogTrigger>
+          <DialogPortal>
+            <DialogOverlay class="fixed inset-0 z-10 bg-overlay" />
+            <DialogContent
+              class="fixed top-1/2 left-1/2 z-20 max-h-[calc(100dvh-3rem)] w-[calc(100%-3rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-surface-raised p-6 text-foreground shadow-xl"
             >
-            <DialogDescription class="mt-3 leading-relaxed text-slate-600">
-              Reka UI handles the dialog's accessibility and focus management. Tailwind CSS gives it
-              its appearance. Press Escape or use the button below to close it.
-            </DialogDescription>
-            <DialogClose
-              class="mt-6 inline-flex cursor-pointer items-center justify-center rounded-lg bg-teal-700 px-4 py-2.5 font-medium text-white hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700"
-            >
-              Close dialog
-            </DialogClose>
-          </DialogContent>
-        </DialogPortal>
-      </DialogRoot>
+              <DialogTitle class="text-2xl font-semibold tracking-tight"
+                >Hello from Reka UI</DialogTitle
+              >
+              <DialogDescription class="mt-3 text-muted">
+                Reka UI handles the dialog's accessibility and focus management. Tailwind CSS gives
+                it its appearance. Press Escape or use the button below to close it.
+              </DialogDescription>
+              <DialogClose
+                class="mt-6 inline-flex min-h-control cursor-pointer items-center justify-center rounded-lg bg-accent px-5 py-3 font-medium text-on-accent hover:bg-accent-hover"
+              >
+                Close dialog
+              </DialogClose>
+            </DialogContent>
+          </DialogPortal>
+        </DialogRoot>
+      </section>
     </div>
   </main>
 </template>

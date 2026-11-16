@@ -1,3 +1,13 @@
+# Milestone Workflow
+
+Use `.working/roadmap.md` to select the next milestone. Work through one milestone at a time:
+
+1. **Explore:** Use the OpenSpec explore workflow to investigate the milestone against the actual codebase and existing specs until the user and agent agree on a solution. Do not implement before agreeing on the direction.
+2. **Specify:** Capture the agreed solution in OpenSpec.
+3. **Break down the work:** Use the `ticket-writer` skill to draft tickets with clear scope, acceptance criteria, and dependencies.
+4. **Track in GitHub:** Publish approved tickets to GitHub and use GitHub to track the milestone's work.
+5. **Implement and verify:** Implement the agreed work and verify the milestone is complete before moving to the next milestone.
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web
