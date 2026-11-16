@@ -7,8 +7,17 @@ import UiButton from '../components/ui/UiButton.vue'
 import UiInput from '../components/ui/UiInput.vue'
 import UiFeedback from '../components/ui/UiFeedback.vue'
 import NotFoundView from './NotFoundView.vue'
+import { appPinia, useCollectionContext } from '../stores/collection-context'
 
 const route = useRoute()
+const context = useCollectionContext(appPinia)
+const archiveDestination = computed(() =>
+  context.destination(window.history.state?.position, String(route.params.id)),
+)
+function returnToArchive(event: MouseEvent) {
+  if (!event.button && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
+    context.breadcrumb = true
+}
 const item = computed(() => findArchiveItem(route.params.id))
 const broken = ref(false)
 const editing = ref(false)
@@ -89,7 +98,8 @@ const uploadDate = computed(() =>
       <ol class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <li>
           <RouterLink
-            to="/"
+            :to="archiveDestination"
+            @click="returnToArchive"
             class="text-accent underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
             >Archive</RouterLink
           >
