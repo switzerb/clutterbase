@@ -1,17 +1,77 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { displayTitle, findArchiveItem } from '../data/archive'
+import { demoSavedItems, displayTitle, findArchiveItem } from '../data/archive'
 import { mockItemId } from '../router/mock-items'
+import UiButton from '../components/ui/UiButton.vue'
+import UiInput from '../components/ui/UiInput.vue'
+import UiFeedback from '../components/ui/UiFeedback.vue'
 import NotFoundView from './NotFoundView.vue'
 
 const route = useRoute()
 const item = computed(() => findArchiveItem(route.params.id))
 const broken = ref(false)
+const editing = ref(false)
+const saved = computed(() => !!item.value && demoSavedItems.has(item.value.id))
+const draft = reactive({ title: '', people: '', approximateDate: '', description: '' })
+const attempted = ref(false)
+const limits = { title: 200, people: 300, approximateDate: 200, description: 2000 }
+const errors = computed(() => ({
+  title: draft.title.length > limits.title ? `Use at most ${limits.title} characters.` : '',
+  people: draft.people.length > limits.people ? `Use at most ${limits.people} characters.` : '',
+  approximateDate:
+    draft.approximateDate.length > limits.approximateDate
+      ? `Use at most ${limits.approximateDate} characters.`
+      : '',
+  description:
+    draft.description.length > limits.description
+      ? `Use at most ${limits.description} characters.`
+      : '',
+}))
+async function edit() {
+  if (!item.value) return
+  Object.assign(draft, {
+    title: item.value.title ?? '',
+    people: item.value.people?.join(', ') ?? '',
+    approximateDate: item.value.approximateDate ?? '',
+    description: item.value.description ?? '',
+  })
+  attempted.value = false
+  editing.value = true
+  await nextTick()
+  document.getElementById('edit-title')?.focus()
+}
+async function closeEditor() {
+  editing.value = false
+  await nextTick()
+  document.getElementById('edit-details')?.focus()
+}
+async function save() {
+  if (!item.value) return
+  attempted.value = true
+  const firstError = Object.entries(errors.value).find(([, error]) => error)
+  if (firstError) {
+    await nextTick()
+    document.getElementById(`edit-${firstError[0]}`)?.focus()
+    return
+  }
+  Object.assign(item.value, {
+    title: draft.title.trim(),
+    people: draft.people
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean),
+    approximateDate: draft.approximateDate.trim(),
+    description: draft.description.trim(),
+  })
+  demoSavedItems.add(item.value.id)
+  await closeEditor()
+}
 watch(
   () => route.params.id,
   () => {
     broken.value = false
+    editing.value = false
   },
 )
 const uploadDate = computed(() =>
@@ -92,6 +152,79 @@ const uploadDate = computed(() =>
             </div>
           </dl>
         </section>
+        <div>
+          <UiButton v-if="!editing" id="edit-details" variant="secondary" @click="edit">
+            Edit details
+          </UiButton>
+          <section
+            v-else
+            aria-labelledby="edit-heading"
+            class="rounded-lg border border-border bg-surface p-4"
+          >
+            <h2 id="edit-heading" class="text-xl font-semibold">Edit details</h2>
+            <p class="mt-2 text-muted">
+              This is a demo. Changes reset on reload and are not saved to an archive.
+            </p>
+            <form class="mt-4 grid min-w-0 gap-4" novalidate @submit.prevent="save">
+              <UiInput
+                id="edit-title"
+                v-model="draft.title"
+                label="Title"
+                hint="Leave blank to use the filename."
+                :error="attempted ? errors.title : ''"
+              />
+              <UiInput
+                id="edit-people"
+                v-model="draft.people"
+                label="People"
+                hint="Separate names with commas."
+                :error="attempted ? errors.people : ''"
+              />
+              <UiInput
+                id="edit-approximateDate"
+                v-model="draft.approximateDate"
+                label="Approximate date"
+                :error="attempted ? errors.approximateDate : ''"
+              />
+              <div class="grid min-w-0 gap-2">
+                <label for="edit-description" class="font-medium">Description</label>
+                <textarea
+                  id="edit-description"
+                  v-model="draft.description"
+                  rows="4"
+                  :aria-invalid="attempted && errors.description ? 'true' : undefined"
+                  :aria-describedby="
+                    attempted && errors.description ? 'edit-description-error' : undefined
+                  "
+                  class="w-full min-w-0 rounded-lg border-2 bg-surface-raised px-3 py-2 text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
+                  :class="
+                    attempted && errors.description
+                      ? 'border-danger border-dashed'
+                      : 'border-border hover:border-foreground'
+                  "
+                />
+                <p
+                  v-if="attempted && errors.description"
+                  id="edit-description-error"
+                  class="font-medium text-danger"
+                >
+                  Error: {{ errors.description }}
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <UiButton type="submit">Save changes</UiButton>
+                <UiButton variant="secondary" @click="closeEditor">Cancel</UiButton>
+              </div>
+            </form>
+          </section>
+          <UiFeedback
+            v-if="saved"
+            class="mt-4"
+            state="demo-save"
+            title="Demo changes saved"
+            description="Your changes are visible in this demo."
+          />
+        </div>
         <section>
           <h2 class="text-xl font-semibold">File information</h2>
           <dl class="mt-3 space-y-3">

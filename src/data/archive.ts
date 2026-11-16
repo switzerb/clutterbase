@@ -1,5 +1,6 @@
 import garden from '../assets/archive/garden.svg'
 import letter from '../assets/archive/letter.svg'
+import { reactive } from 'vue'
 
 export type ArchiveItem = {
   id: string
@@ -16,7 +17,7 @@ export type ArchiveItem = {
 }
 
 // All content and images are invented for the public demo; timestamps are fixed for discovery.
-export const archiveItems: ArchiveItem[] = [
+const fixtures: ArchiveItem[] = [
   {
     id: 'garden-afternoon',
     filename: 'garden-afternoon.svg',
@@ -68,6 +69,9 @@ export const archiveItems: ArchiveItem[] = [
     preview: { state: 'failed' },
   },
 ]
+
+export const archiveItems = reactive<ArchiveItem[]>(structuredClone(fixtures))
+export const demoSavedItems = reactive(new Set<string>())
 
 export const displayTitle = (item: ArchiveItem) => item.title || item.filename
 export const findArchiveItem = (id: unknown) => archiveItems.find((item) => item.id === id)
