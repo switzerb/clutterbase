@@ -77,6 +77,7 @@ export async function openBrowser() {
     await command('Page.enable')
     return {
       command,
+      send,
       evaluate,
       onEvent: (listener) => {
         listeners.add(listener)

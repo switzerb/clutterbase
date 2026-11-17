@@ -1,6 +1,6 @@
 # Implementation
 
-Approved and published to GitHub. D1–D12 are implemented and verified. D13 remains not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
+Approved and published to GitHub. D1–D13 are implemented and verified. The ten remaining tickets were delivered on sequential, unpushed ticket branches for review; the acceptance record is below.
 
 All thirteen issues belong to **UX Design and Navigation**, GitHub milestone 1:
 https://github.com/switzerb/clutterbase/milestone/1
@@ -415,7 +415,7 @@ Keep relatives from losing their place when they open a photo or letter and retu
 
 ## 7. Cross-screen acceptance
 
-- [ ] 7.1 D13 — Verify integrated milestone usability and quality gates; deliver browser evidence for both themes and supported layouts, plus passing check, test, type-check, build, and preview smoke checks.
+- [x] 7.1 D13 — Verify integrated milestone usability and quality gates; deliver browser evidence for both themes and supported layouts, plus passing check, test, type-check, build, and preview smoke checks.
 
 ### D13 — [#15](https://github.com/switzerb/clutterbase/issues/15)
 
@@ -454,3 +454,12 @@ Verify that the completed foundation works as one coherent experience on the int
 - Review, approval, publication to milestone 1, and dependency linking are complete.
 - Begin implementation only after a separate user request.
 - After implementation and acceptance, archive the OpenSpec change and verify the resulting durable specs.
+
+## D13 acceptance record
+
+- Chrome Headless 157.0.8103.51 on macOS; built preview at `http://127.0.0.1:5390`. Light and dark system appearances: Archive → item → breadcrumb → Archive, then Inbox, Family, and Upload passed; route headings received focus on destination navigation.
+- `scripts/verify-milestone.mjs` checked 42 combinations of Archive, photo, letter, long/sparse item, Inbox, Family, and Upload at 1366×768, actual Chrome 200% default page zoom (683 CSS px, DPR 2), and 320 CSS px. It checked page overflow, action bounds, and image loads; representative narrow and zoom screenshots were visually inspected. At zoom, CDP full-page captures use an explicit physical-size clip from CSS content dimensions × 2; the script checks viewport, zoom, content metrics, and PNG dimensions. Both themes' complete screens are in `.working/verification/acceptance/*-zoom200-*.png`. Computed theme token pairs passed 4.5:1 text and 3:1 border/focus thresholds.
+- Built-preview `verify-theme`, `verify-navigation`, `verify-archive`, `verify-discovery`, `verify-items`, `verify-editing`, `verify-inbox`, `verify-family`, `verify-upload`, and `verify-context` passed using `PREVIEW_URL=http://127.0.0.1:5390 vp node scripts/verify-<name>.mjs`. These cover keyboard interaction, focus, native Back/Forward, breadcrumb and scroll restoration, direct item URLs, long content, validation, demo-save/reload, thumbnail fallbacks, and upload network inspection. Loading, empty, error, and no-results recipes were also checked in the milestone script. Dev-only controls and feedback fixtures passed at port 5290, including keyboard and reduced motion. The controls verifier initially encountered a navigation-context race; its bootstrap now waits for the fixture's page-load event and passed three consecutive runs.
+- `vp check`, `vp test` (133 tests), `vp run type-check`, and `vp run build` passed. Preview started with `vp run preview --host 127.0.0.1 --port 5390 --strictPort`. Evidence and command output: ignored `.working/verification/acceptance/`; individual existing verifiers also write ignored evidence under `.working/verification/`.
+- Fixture source and bundled local artwork were inspected as synthetic; upload selection used a synthetic file and produced no subsequent requests. This is a prototype inspection, not proof about future content or deployments. Authentication, actual uploads, real PDF rendering, durable archive persistence, genealogy, and AI processing are outside this milestone. The compatibility `/archive/sample-item` remains a placeholder.
+- Lead independently reran all ten built-preview verifiers, the controls and feedback fixture checks, the corrected 42-case milestone matrix, and the quality gates. Representative complete zoom and narrow screenshots were inspected. No outstanding acceptance failures remain; branches are local and await review before publishing or archiving.
