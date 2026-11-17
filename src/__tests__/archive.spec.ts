@@ -67,7 +67,7 @@ describe('synthetic archive', () => {
       await flushPromises()
       expect(wrapper.get('h1').text()).toBe(item.title || item.filename)
       expect(document.title).toBe(`${item.title || item.filename} · Clutterbase`)
-      expect(wrapper.text()).toContain('prototype placeholder')
+      expect(wrapper.text()).toContain('File information')
     }
     wrapper.unmount()
   })

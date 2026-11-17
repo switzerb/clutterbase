@@ -11,6 +11,7 @@ export type ArchiveItem = {
   approximateDate?: string
   description?: string
   pageCount?: number
+  aiSuggestion?: string
   preview: { state: 'ready'; src: string } | { state: 'missing' | 'processing' | 'failed' }
 }
 
@@ -37,6 +38,7 @@ export const archiveItems: ArchiveItem[] = [
     approximateDate: 'Possibly late 1960s',
     description: 'A three-page note about a summer away.',
     pageCount: 3,
+    aiSuggestion: 'Possibly written in 1968.',
     preview: { state: 'ready', src: letter },
   },
   {

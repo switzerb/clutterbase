@@ -1,6 +1,6 @@
 # Implementation
 
-Approved and published to GitHub. D1–D6 are implemented and verified. D7–D13 remain not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
+Approved and published to GitHub. D1–D7 are implemented and verified. D8–D13 remain not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
 
 All thirteen issues belong to **UX Design and Navigation**, GitHub milestone 1:
 https://github.com/switzerb/clutterbase/milestone/1
@@ -217,7 +217,7 @@ Help relatives explore the mock collection using familiar discovery controls whi
 
 ## 4. Item presentation
 
-- [ ] 4.1 D7 — Build dedicated viewing-first item pages and breadcrumbs; verify responsive previews, sparse details, AI labels, and missing-item tests.
+- [x] 4.1 D7 — Build dedicated viewing-first item pages and breadcrumbs; verify responsive previews, sparse details, AI labels, and missing-item tests.
 - [ ] 4.2 D8 — Add mock item-detail editing; verify save/cancel behavior, validation, demo-only feedback, and tests.
 
 ### D7 — [#9](https://github.com/switzerb/clutterbase/issues/9)

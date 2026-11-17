@@ -11,12 +11,13 @@ watch(
   [() => route.path, () => route.matched.length],
   async () => {
     if (!route.matched.length) return
+    const item = route.name === 'item' ? findArchiveItem(route.params.id) : undefined
     const title =
       route.name === 'item'
         ? route.params.id === mockItemId
           ? 'Sample item'
-          : findArchiveItem(route.params.id)
-            ? displayTitle(findArchiveItem(route.params.id)!)
+          : item
+            ? displayTitle(item)
             : 'Item not found'
         : typeof route.meta.title === 'string'
           ? route.meta.title
