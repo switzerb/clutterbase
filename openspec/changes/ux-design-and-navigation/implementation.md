@@ -1,6 +1,6 @@
 # Implementation
 
-Approved and published to GitHub. D1–D4 are implemented and verified. D5–D13 remain not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
+Approved and published to GitHub. D1–D5 are implemented and verified. D6–D13 remain not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
 
 All thirteen issues belong to **UX Design and Navigation**, GitHub milestone 1:
 https://github.com/switzerb/clutterbase/milestone/1
@@ -149,7 +149,7 @@ Make the archive the obvious starting point and give every destination a predict
 
 ## 3. Archive browsing
 
-- [ ] 3.1 D5 — Build the mock archive grid, cards, and fixtures; verify preview fallbacks, collection-state examples, card tests, and responsive layout.
+- [x] 3.1 D5 — Build the mock archive grid, cards, and fixtures; verify preview fallbacks, collection-state examples, card tests, and responsive layout.
 - [ ] 3.2 D6 — Add mock search, filtering, and sorting with URL criteria; verify result counts, no-results recovery, ordering, and URL restoration tests.
 
 ### D5 — [#7](https://github.com/switzerb/clutterbase/issues/7)

@@ -3,6 +3,7 @@ import { nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppHeader from './components/layout/AppHeader.vue'
 import { mockItemId } from './router/mock-items'
+import { displayTitle, findArchiveItem } from './data/archive'
 
 const route = useRoute()
 let initialized = false
@@ -14,7 +15,9 @@ watch(
       route.name === 'item'
         ? route.params.id === mockItemId
           ? 'Sample item'
-          : 'Item not found'
+          : findArchiveItem(route.params.id)
+            ? displayTitle(findArchiveItem(route.params.id)!)
+            : 'Item not found'
         : typeof route.meta.title === 'string'
           ? route.meta.title
           : 'Page not found'

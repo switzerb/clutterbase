@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouterHistory } from 'vue-router'
 import DestinationView from '../views/DestinationView.vue'
+import ArchiveView from '../views/ArchiveView.vue'
 import ItemView from '../views/ItemView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
@@ -9,7 +10,7 @@ export function createAppRouter(
   return createRouter({
     history,
     routes: [
-      { path: '/', component: DestinationView, meta: { title: 'Archive', destination: 'archive' } },
+      { path: '/', component: ArchiveView, meta: { title: 'Archive', destination: 'archive' } },
       {
         path: '/inbox',
         component: DestinationView,
