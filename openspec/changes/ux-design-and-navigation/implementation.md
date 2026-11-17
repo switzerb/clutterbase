@@ -1,6 +1,6 @@
 # Implementation
 
-Approved and published to GitHub. D1–D9 are implemented and verified. D10–D13 remain not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
+Approved and published to GitHub. D1–D10 are implemented and verified. D11–D13 remain not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
 
 All thirteen issues belong to **UX Design and Navigation**, GitHub milestone 1:
 https://github.com/switzerb/clutterbase/milestone/1
@@ -286,7 +286,7 @@ Show how contributors can enrich a letter or photo while keeping the default ite
 ## 5. Illustrative feature destinations
 
 - [x] 5.1 D9 — Illustrate Inbox with mock review lists; verify statuses, demo boundaries, keyboard operation, and screen tests.
-- [ ] 5.2 D10 — Illustrate Family with mock profiles; verify person cards, associated material, responsive layout, and screen tests.
+- [x] 5.2 D10 — Illustrate Family with mock profiles; verify person cards, associated material, responsive layout, and screen tests.
 - [ ] 5.3 D11 — Illustrate Upload and per-file outcomes; verify demo boundaries, accessible controls, screen tests, and no file transfers.
 
 ### D9 — [#11](https://github.com/switzerb/clutterbase/issues/11)
