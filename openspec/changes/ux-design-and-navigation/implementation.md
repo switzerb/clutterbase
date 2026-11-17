@@ -1,6 +1,6 @@
 # Implementation
 
-Approved and published to GitHub. D1–D11 are implemented and verified. D12–D13 remain not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
+Approved and published to GitHub. D1–D12 are implemented and verified. D13 remains not started. The remaining work is being delivered on sequential, unpushed ticket branches for review.
 
 All thirteen issues belong to **UX Design and Navigation**, GitHub milestone 1:
 https://github.com/switzerb/clutterbase/milestone/1
@@ -380,7 +380,7 @@ Show where uploading will happen and how independent file outcomes will look wit
 
 ## 6. Return-to-browsing behavior
 
-- [ ] 6.1 D12 — Preserve collection context across item visits; verify browser Back and breadcrumbs restore criteria, order, scroll, and usable focus, with direct-visit defaults.
+- [x] 6.1 D12 — Preserve collection context across item visits; verify browser Back and breadcrumbs restore criteria, order, scroll, and usable focus, with direct-visit defaults.
 
 ### D12 — [#14](https://github.com/switzerb/clutterbase/issues/14)
 

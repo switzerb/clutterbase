@@ -2,9 +2,22 @@
 import { ref, watch } from 'vue'
 import { displayTitle, type ArchiveItem } from '../../data/archive'
 import UiStatus from '../ui/UiStatus.vue'
+import { useRoute } from 'vue-router'
+import { appPinia, useCollectionContext } from '../../stores/collection-context'
 
 const props = defineProps<{ item: ArchiveItem }>()
 const broken = ref(false)
+const route = useRoute()
+function capture(event: MouseEvent) {
+  if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  useCollectionContext(appPinia).capture({
+    url: route.fullPath,
+    itemId: props.item.id,
+    originPosition: window.history.state?.position,
+    x: window.scrollX,
+    y: window.scrollY,
+  })
+}
 watch(
   () => props.item,
   () => {
@@ -17,6 +30,8 @@ watch(
   <li class="min-w-0">
     <RouterLink
       :to="{ name: 'item', params: { id: item.id } }"
+      :data-archive-card="item.id"
+      @click="capture"
       class="group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-surface-raised text-foreground hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
     >
       <div class="flex aspect-[4/3] items-center justify-center overflow-hidden bg-surface p-3">

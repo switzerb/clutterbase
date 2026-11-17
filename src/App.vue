@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import AppHeader from './components/layout/AppHeader.vue'
 import { mockItemId } from './router/mock-items'
 import { displayTitle, findArchiveItem } from './data/archive'
+import { appPinia, useCollectionContext } from './stores/collection-context'
 
 const route = useRoute()
 let initialized = false
@@ -29,6 +30,7 @@ watch(
       return
     }
     await nextTick()
+    if (route.path === '/' && useCollectionContext(appPinia).returning) return
     document.querySelector<HTMLElement>('main h1')?.focus()
   },
   { immediate: true, flush: 'post' },

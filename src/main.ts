@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { appPinia } from './stores/collection-context'
 
 import App from './App.vue'
 import router from './router'
@@ -7,7 +7,7 @@ import './style.css'
 
 const app = createApp(App)
 
-app.use(createPinia())
+app.use(appPinia)
 app.use(router)
 
 app.mount('#app')
