@@ -61,6 +61,8 @@ select throws_ok($$select public.set_contributor_block('20000000-0000-0000-0000-
 set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000003';
 select results_eq($$select name from public.archives order by name$$, array['Archive A', 'Archive B'], 'unblocking restores without invitation');
 reset role;
-select is((select count(*) from public.archive_memberships), 4::bigint, 'all original memberships preserved');
+select is((select count(*) from public.archive_memberships where archive_id in (
+  '20000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000002'
+)), 4::bigint, 'all original fixture memberships preserved');
 select * from finish();
 rollback;

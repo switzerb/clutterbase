@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, shallowRef } from 'vue'
+import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import InviteForm from '../components/auth/InviteForm.vue'
 import InvitationList from '../components/auth/InvitationList.vue'
 import MemberList from '../components/auth/MemberList.vue'
+import InvitationLinkResult from '../components/auth/InvitationLinkResult.vue'
 import UiButton from '../components/ui/UiButton.vue'
 import {
   accessGateway,
@@ -21,6 +22,18 @@ const invitations = shallowRef<Invitation[]>([])
 const members = shallowRef<Member[]>([])
 const loading = shallowRef(false)
 const ready = shallowRef(false)
+const deliveryMode = shallowRef<'manual' | 'email'>('manual')
+const linkResult = shallowRef<{ invitation: Invitation; link: string } | null>(null)
+let expiryTimer: ReturnType<typeof setTimeout> | undefined
+function clearLink() {
+  linkResult.value = null
+  clearTimeout(expiryTimer)
+}
+watch(
+  [() => session.identity?.id, () => session.archive?.id, () => session.archive?.role],
+  clearLink,
+  { flush: 'sync' },
+)
 const message = shallowRef('')
 type Operation =
   | { kind: 'invitation'; action: InvitationAction }
@@ -30,6 +43,7 @@ const disabled = computed(() => loading.value || Boolean(retry.value) || !ready.
 let active = true
 onUnmounted(() => {
   active = false
+  clearLink()
 })
 const failures: Record<string, string> = {
   member_blocked:
@@ -37,7 +51,7 @@ const failures: Record<string, string> = {
   membership_exists: 'This address already has a membership. Invitations cannot change its role.',
   invitation_exists: 'A pending invitation already exists. Refresh status to resend or cancel it.',
   invitation_not_pending: 'That invitation is no longer pending. Refresh status.',
-  send_rate_limited: 'Too many invitations were sent. Wait before sending another.',
+  send_rate_limited: 'Too many invitations were created. Wait before creating another.',
   retry_conflict: 'This retry does not match the original request. Refresh status.',
   replacement_mismatch: 'The invitation changed. Refresh status before resending.',
   owner_protected: 'Owner memberships cannot be blocked.',
@@ -52,6 +66,7 @@ async function denial(error: unknown) {
     invitations.value = []
     members.value = []
     ready.value = false
+    clearLink()
     await session.refresh()
     if (active) await router.replace('/no-access')
     return true
@@ -66,10 +81,23 @@ async function refresh() {
     if (!active) return
     invitations.value = data.invitations
     members.value = data.members
+    deliveryMode.value = data.deliveryMode
+    const shown = linkResult.value
+    if (
+      shown &&
+      !data.invitations.some(
+        (invitation) =>
+          invitation.id === shown.invitation.id &&
+          invitation.status === 'pending' &&
+          Date.parse(invitation.expiresAt) > Date.now(),
+      )
+    )
+      clearLink()
     ready.value = true
   } catch (error) {
     if (!active) return
     ready.value = false
+    clearLink()
     if (!(await denial(error)))
       message.value =
         'Access lists could not be confirmed. Check your connection and refresh status.'
@@ -79,19 +107,42 @@ async function refresh() {
 }
 async function perform(operation: Operation) {
   if (loading.value) return
+  const identityId = session.identity?.id
+  const revision = session.revision
   loading.value = true
+  clearLink()
   retry.value = operation
   try {
     if (operation.kind === 'invitation') {
       const result = await accessGateway.invite(operation.action)
-      if (!active) return
+      if (
+        !active ||
+        session.identity?.id !== identityId ||
+        session.revision !== revision ||
+        session.archive?.role !== 'owner'
+      )
+        return
       message.value =
         `Invitation ${result.invitation.status}. ` +
-        (result.invitation.delivery === 'accepted'
-          ? 'Email provider accepted the message; inbox delivery is not confirmed.'
-          : result.invitation.delivery === 'rejected'
-            ? 'Email delivery was rejected. Use Resend invitation for a new link.'
-            : 'Email delivery is unknown. Refresh status or explicitly resend a new link.')
+        (result.invitation.deliveryMode === 'manual'
+          ? 'No email was sent. ' +
+            (result.link
+              ? 'Copy the new link below to share it yourself.'
+              : 'The original link cannot be retrieved. For a pending invitation, choose Create replacement link to get a new one.')
+          : result.invitation.delivery === 'accepted'
+            ? 'Email provider accepted the message; inbox delivery is not confirmed.'
+            : result.invitation.delivery === 'rejected'
+              ? 'Email delivery was rejected. Use Resend invitation for a new link.'
+              : 'Email delivery is unknown. Refresh status or explicitly resend a new link.')
+      if (
+        result.link &&
+        result.invitation.deliveryMode === 'manual' &&
+        result.invitation.status === 'pending' &&
+        Date.parse(result.invitation.expiresAt) > Date.now()
+      ) {
+        linkResult.value = { invitation: result.invitation, link: result.link }
+        expiryTimer = setTimeout(clearLink, Date.parse(result.invitation.expiresAt) - Date.now())
+      }
     } else {
       await accessGateway.block(operation.archiveId, operation.userId, operation.blocked)
       if (!active) return
@@ -109,7 +160,7 @@ async function perform(operation: Operation) {
       message.value = failures[outcome]
     } else {
       message.value =
-        'The operation could not be confirmed. Refresh status or retry the same operation; retry will not send another invitation.'
+        'The operation could not be confirmed. Refresh status or retry the same operation; retry will not create another link or send another invitation.'
     }
   } finally {
     if (active) loading.value = false
@@ -168,12 +219,20 @@ onMounted(() => {
       >Retry same operation</UiButton
     >
   </div>
-  <InviteForm :disabled="disabled" @invite="invite" />
+  <InvitationLinkResult
+    v-if="linkResult"
+    :key="linkResult.invitation.id"
+    :link="linkResult.link"
+    :email="linkResult.invitation.email"
+    :expires-at="linkResult.invitation.expiresAt"
+  />
+  <InviteForm :disabled="disabled" :delivery-mode="deliveryMode" @invite="invite" />
   <p v-if="loading" role="status" class="mt-4">Checking access records…</p>
   <template v-if="ready">
     <InvitationList
       :invitations="invitations"
       :disabled="disabled"
+      :delivery-mode="deliveryMode"
       @resend="resend"
       @cancel="cancel"
     />

@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { randomUUID, createHash } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { sendLocalInvitation } from '../supabase/functions/_shared/invitation-delivery.ts'
+import invitationFunction from '../supabase/functions/archive-invitations/index.ts'
 
 const local = JSON.parse(
   execFileSync('vp', ['exec', 'supabase', 'status', '-o', 'json'], { encoding: 'utf8' }),
@@ -82,6 +83,50 @@ async function edge(person, body) {
     body: JSON.stringify(body),
   })
   return { status: response.status, data: await response.json() }
+}
+
+// Exercise the same Edge handler in explicit Mailpit mode without changing the
+// running app's manual-sharing configuration. Auth and RPC still use real HTTP.
+async function configuredEdge(person, body, mode, afterIssue) {
+  const settings = {
+    SUPABASE_URL: local.API_URL,
+    SUPABASE_PUBLISHABLE_KEY: local.PUBLISHABLE_KEY,
+    SUPABASE_SECRET_KEY: local.SECRET_KEY,
+    APP_ORIGIN: 'http://localhost:5173',
+    INVITATION_DELIVERY_MODE: mode,
+    INVITATION_MAILPIT_URL: mode === 'mailpit' ? `${local.MAILPIT_URL}/api/v1/send` : undefined,
+  }
+  const saved = Object.fromEntries(Object.keys(settings).map((key) => [key, process.env[key]]))
+  const originalFetch = globalThis.fetch
+  if (afterIssue)
+    globalThis.fetch = async (...args) => {
+      const response = await originalFetch(...args)
+      const requestUrl = args[0] instanceof Request ? args[0].url : args[0].toString()
+      if (requestUrl.endsWith('/rpc/issue_archive_invitation')) {
+        await afterIssue(await response.clone().json())
+      }
+      return response
+    }
+  try {
+    for (const [key, value] of Object.entries(settings)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+    const response = await invitationFunction.fetch(
+      new Request(`${local.FUNCTIONS_URL}/archive-invitations`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${person.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }),
+    )
+    return { status: response.status, data: await response.json() }
+  } finally {
+    globalThis.fetch = originalFetch
+    for (const [key, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
 }
 
 try {
@@ -269,10 +314,10 @@ try {
     role: 'owner',
     retryId: randomUUID(),
   }
-  const sent = await edge(owner, sendBody)
+  const sent = await configuredEdge(owner, sendBody, 'mailpit')
   assert.equal(sent.status, 200, JSON.stringify(sent.data))
   assert.equal(sent.data.invitation.delivery, 'accepted')
-  const again = await edge(owner, sendBody)
+  const again = await configuredEdge(owner, sendBody, 'mailpit')
   assert.equal(again.status, 200)
   assert.equal(again.data.outcome, 'reconciled')
   assert.equal(again.data.invitation.id, sent.data.invitation.id)
@@ -282,6 +327,164 @@ try {
     `${local.MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:${sendBody.email}`)}`,
   )
   assert.equal((await mailbox.json()).count, 1, 'retry sends no second email')
+
+  const shared = await user('manual-recipient')
+  const shareBody = {
+    action: 'create',
+    archiveId,
+    email: shared.email,
+    role: 'contributor',
+    retryId: randomUUID(),
+  }
+  const manual = await edge(owner, shareBody)
+  assert.equal(manual.status, 200, JSON.stringify(manual.data))
+  assert.equal(manual.data.invitation.deliveryMode, 'manual')
+  assert.equal(manual.data.invitation.delivery, 'not_requested')
+  const sharedToken = new URLSearchParams(new URL(manual.data.link).hash.slice(1)).get('token')
+  assert.match(sharedToken, /^[a-f0-9]{64}$/)
+  assert.equal(new URL(manual.data.link).origin, 'http://localhost:5173')
+  assert.equal(
+    sql(
+      `select token_digest from private.archive_invitations where id = '${manual.data.invitation.id}'`,
+    ).trim(),
+    digest(sharedToken),
+  )
+  assert.equal(
+    (
+      await fetch(
+        `${local.MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:${shared.email}`)}`,
+      ).then((r) => r.json())
+    ).count,
+    0,
+  )
+  success(await record(manual.data.invitation.id, 'accepted'))
+  assert.equal(
+    success(await list(owner)).find((item) => item.id === manual.data.invitation.id).delivery,
+    'not_requested',
+  )
+  const manualRetry = await edge(owner, shareBody)
+  assert.equal(manualRetry.data.outcome, 'reconciled')
+  assert.equal(manualRetry.data.link, undefined, 'lost-response retry cannot recreate plaintext')
+  assert.equal((await configuredEdge(owner, shareBody, 'mailpit')).data.outcome, 'retry_conflict')
+  assert.equal((await edge(otherOwner, { ...shareBody, retryId: randomUUID() })).status, 403)
+  assert.equal((await edge(recipient, { ...shareBody, retryId: randomUUID() })).status, 403)
+  assert.equal((await edge(owner, { ...shareBody, origin: 'https://other.test' })).status, 400)
+  assert.equal((await edge(owner, { ...shareBody, deliveryMode: 'email' })).status, 400)
+  assert.equal((await edge(owner, { action: 'list', archiveId })).data.deliveryMode, 'manual')
+  assert.equal(
+    JSON.stringify((await edge(owner, { action: 'list', archiveId })).data).includes(sharedToken),
+    false,
+  )
+  assert.equal(
+    (await edge(otherOwner, { action: 'accept', token: sharedToken })).data.outcome,
+    'wrong_account',
+  )
+  const replacementBody = {
+    ...shareBody,
+    action: 'resend',
+    replacesId: manual.data.invitation.id,
+    retryId: randomUUID(),
+  }
+  const replacement = await edge(owner, replacementBody)
+  assert.equal(replacement.status, 200)
+  const replacementToken = new URLSearchParams(new URL(replacement.data.link).hash.slice(1)).get(
+    'token',
+  )
+  assert.notEqual(replacementToken, sharedToken)
+  assert.equal(
+    (await edge(shared, { action: 'accept', token: sharedToken })).data.outcome,
+    'replaced',
+  )
+  assert.equal((await edge(owner, shareBody)).data.link, undefined)
+  assert.equal(
+    (await edge(shared, { action: 'accept', token: replacementToken })).data.outcome,
+    'accepted',
+  )
+  assert.equal(
+    (await edge(owner, replacementBody)).data.link,
+    undefined,
+    'accepted retry returns no link',
+  )
+  success(
+    await owner.api.rpc('set_contributor_block', {
+      target_archive_id: archiveId,
+      target_user_id: shared.id,
+      should_block: true,
+    }),
+  )
+  assert.equal(
+    (await edge(shared, { action: 'accept', token: replacementToken })).data.outcome,
+    'member_blocked',
+  )
+  assert.deepEqual(
+    success(await shared.api.from('archives').select()),
+    [],
+    'retained token loses access after block',
+  )
+  assert.equal(
+    (await edge(owner, { ...shareBody, retryId: randomUUID() })).data.outcome,
+    'member_blocked',
+  )
+
+  for (const status of ['canceled', 'replaced', 'accepted', 'expired']) {
+    const raced = await configuredEdge(
+      owner,
+      {
+        ...shareBody,
+        email: `race-${randomUUID()}@example.test`,
+        retryId: randomUUID(),
+      },
+      'manual',
+      async ({ invitation }) => {
+        // Deterministically change lifecycle state after issuance, before reconciliation.
+        sql(
+          status === 'expired'
+            ? `update private.archive_invitations set issued_at = now() - interval '7 days', expires_at = now() where id = '${invitation.id}'`
+            : `update private.archive_invitations set status = '${status}'${status === 'accepted' ? `, accepted_by = '${shared.id}', accepted_at = now()` : ''} where id = '${invitation.id}'`,
+        )
+      },
+    )
+    assert.equal(raced.status, 200)
+    assert.equal(
+      raced.data.link,
+      undefined,
+      `${status} during reconciliation must suppress the credential`,
+    )
+  }
+  const noMailBody = {
+    ...shareBody,
+    email: `no-mail-${randomUUID()}@example.test`,
+    retryId: randomUUID(),
+  }
+  const noMail = await configuredEdge(owner, noMailBody, 'manual')
+  assert.equal(noMail.status, 200, 'manual mode needs no Mailpit setting')
+  assert.ok(noMail.data.link)
+  success(await cancel(owner, noMail.data.invitation.id))
+  const canceledManual = await edge(owner, noMailBody)
+  assert.equal(canceledManual.data.invitation.status, 'canceled')
+  assert.equal(canceledManual.data.link, undefined)
+
+  const expiringBody = {
+    ...shareBody,
+    email: `expired-manual-${randomUUID()}@example.test`,
+    retryId: randomUUID(),
+  }
+  const expiring = await edge(owner, expiringBody)
+  sql(
+    `update private.archive_invitations set issued_at = now() - interval '7 days', expires_at = now() where id = '${expiring.data.invitation.id}'`,
+  )
+  assert.equal((await edge(owner, expiringBody)).data.link, undefined)
+  const simultaneousBody = {
+    ...shareBody,
+    email: `simultaneous-${randomUUID()}@example.test`,
+    retryId: randomUUID(),
+  }
+  const simultaneous = await Promise.all([
+    edge(owner, simultaneousBody),
+    edge(owner, simultaneousBody),
+  ])
+  assert.equal(simultaneous.filter((response) => response.data.link).length, 1)
+  assert.equal(simultaneous[0].data.invitation.id, simultaneous[1].data.invitation.id)
 
   const racing = await user('racing')
   const base = success(await issue(owner, racing.email, 'race-old', { invited_role: 'owner' }))

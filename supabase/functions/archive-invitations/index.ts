@@ -126,8 +126,14 @@ export default {
           }),
         )
       }
+      const configuredMode = env.INVITATION_DELIVERY_MODE ?? 'manual'
+      if (!['manual', 'mailpit'].includes(configuredMode)) {
+        return reply(503, { outcome: 'delivery_not_configured' })
+      }
+      const deliveryMode = configuredMode === 'manual' ? 'manual' : 'email'
       if (action === 'list')
         return reply(200, {
+          deliveryMode,
           invitations: await rpc('list_archive_invitations', {
             target_archive_id: input.archiveId,
           }),
@@ -140,15 +146,32 @@ export default {
           }),
         })
 
-      // A local-only delivery adapter must never accidentally deliver from a hosted deployment.
+      // Manual links need only the canonical origin, not a mail service.
       const deliveryEndpoint = env.INVITATION_MAILPIT_URL
       const origin = env.APP_ORIGIN
+      if (!origin) return reply(503, { outcome: 'delivery_not_configured' })
+      const appOrigin = new URL(origin)
       if (
-        !deliveryEndpoint ||
-        !origin ||
-        !['127.0.0.1', 'localhost', 'kong', 'supabase_kong_clutterbase'].includes(
-          new URL(url).hostname,
-        )
+        appOrigin.username ||
+        appOrigin.password ||
+        appOrigin.pathname !== '/' ||
+        appOrigin.search ||
+        appOrigin.hash ||
+        (appOrigin.protocol !== 'https:' &&
+          !(
+            appOrigin.protocol === 'http:' &&
+            ['localhost', '127.0.0.1'].includes(appOrigin.hostname)
+          ))
+      ) {
+        return reply(503, { outcome: 'delivery_not_configured' })
+      }
+      // Mailpit remains an explicitly enabled local-only adapter.
+      if (
+        configuredMode === 'mailpit' &&
+        (!deliveryEndpoint ||
+          !['127.0.0.1', 'localhost', 'kong', 'supabase_kong_clutterbase'].includes(
+            new URL(url).hostname,
+          ))
       ) {
         return reply(503, { outcome: 'delivery_not_configured' })
       }
@@ -163,13 +186,14 @@ export default {
           invited_role: input.role,
           replaces_id: action === 'resend' ? input.replacesId : null,
           credential_digest: await digestCredential(token),
+          delivery_mode: deliveryMode,
         },
         true,
       )
-      if (issued.created) {
-        const link = new URL('/invitation', origin)
-        link.hash = new URLSearchParams({ token }).toString()
-        const delivery = await sendLocalInvitation(deliveryEndpoint, {
+      const link = new URL('/invitation', appOrigin)
+      link.hash = new URLSearchParams({ token }).toString()
+      if (issued.created && configuredMode === 'mailpit') {
+        const delivery = await sendLocalInvitation(deliveryEndpoint!, {
           to: issued.invitation.email,
           role: issued.invitation.role,
           link: link.toString(),
@@ -182,9 +206,16 @@ export default {
       }
       // Reconcile cancellation/replacement that may have won while delivery was in flight.
       const current = await rpc('list_archive_invitations', { target_archive_id: input.archiveId })
+      const invitation = current.find((item: { id: string }) => item.id === issued.invitation.id)
+      const revealLink =
+        configuredMode === 'manual' &&
+        issued.created &&
+        invitation?.status === 'pending' &&
+        Date.parse(invitation.expiresAt) > Date.now()
       return reply(200, {
         outcome: issued.created ? 'created' : 'reconciled',
-        invitation: current.find((item: { id: string }) => item.id === issued.invitation.id),
+        invitation,
+        ...(revealLink ? { link: link.toString() } : {}),
       })
     } catch (error) {
       const outcome =

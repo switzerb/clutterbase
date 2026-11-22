@@ -2,6 +2,8 @@
 
 These approved, one-ticket-per-task boundaries are published under [milestone 2: Authentication and Authorization](https://github.com/switzerb/clutterbase/milestone/2). Completion is tracked below. Requirements live in `specs/`; architecture and deployment constraints live in `design.md`. Keep implementation discoveries in this change and verification evidence in ignored local artifacts, not a new `docs/` catalog.
 
+Tasks 1.1–6.1 record completion of the original local email-delivery implementation. Task 6.2 (#35) adds locally verified manual sharing. Hosted release verification remains in 7.1.
+
 ## GitHub tracking
 
 | Task | Issue                                                                                                             |
@@ -12,6 +14,7 @@ These approved, one-ticket-per-task boundaries are published under [milestone 2:
 | 4.1  | [#31 — Add passwordless sign in and navigation](https://github.com/switzerb/clutterbase/issues/31)                |
 | 5.1  | [#32 — Add verified invitation acceptance for relatives](https://github.com/switzerb/clutterbase/issues/32)       |
 | 6.1  | [#33 — Add simple owner access management controls](https://github.com/switzerb/clutterbase/issues/33)            |
+| 6.2  | [#35 — Add manually shared archive invitation links](https://github.com/switzerb/clutterbase/issues/35)           |
 | 7.1  | [#34 — Verify authentication and archive access release](https://github.com/switzerb/clutterbase/issues/34)       |
 
 Dependency outline:
@@ -26,10 +29,15 @@ Dependency outline:
  +--> 6.1 <---+
         |
         v
+       6.2
+        |
+        v
        7.1
 ```
 
 Tasks 3.1 and 4.1 can proceed in parallel after their prerequisites. Tasks 5.1 and 6.1 can proceed in parallel once their shared API and session contracts exist; the diagram's 5.1-to-6.1 relationship denotes final integration, not a requirement to serialize their UI work. Do not deploy until 7.1's release gates pass.
+
+Task 6.2 depends on the verified invitation, acceptance, and owner-control foundations (2.1, 5.1, 6.1). It precedes manual-mode hosted verification in 7.1. Provider-free Google testing may precede production email setup, but it does not complete the full email-code/Google release checklist.
 
 ## 1. Membership foundation
 
@@ -228,6 +236,44 @@ Let multiple owners invite family and block or restore contributors without usin
 - Can proceed in parallel with 5.1. This is not a general account-management or archive-management screen.
 ```
 
+## 6.2 Manual invitation sharing
+
+- [x] 6.2 Add manually shared archive invitation links; verify owner-only one-time link display/copy, provider-free creation, explicit replacement, lost-response reconciliation, credential cleanup, and unchanged acceptance/access boundaries.
+
+```markdown
+# Add manually shared archive invitation links
+
+**Status:** Complete
+**Type:** Feature
+**Priority:** Medium
+**Dependencies:** 2.1 (#29), 5.1 (#32), 6.1 (#33)
+
+## Summary
+
+Let owners create and copy email-bound invitation links to share with relatives themselves. This enables testing with matching Google accounts before configuring a hosted email provider.
+
+## Acceptance Criteria
+
+- Manage access defaults to Create invitation link in manual mode. Contributor remains the default role; Owner requires the existing privilege acknowledgement.
+- Creation works without SMTP or Mailpit. The owner sees the new link with Copy invitation link, selectable-text fallback, expiry, and clear instructions that no email was sent.
+- Only the initial successful authorized issuance result exposes the link. Store credentials digest-only; keep links out of status lists, routine logs, and persistent owner-browser storage. Clipboard failure does not issue a new invitation.
+- Clear displayed links on reload, page exit, sign-out, identity/access loss, or known invalidation. After loss, explain that the link cannot be retrieved.
+- Create replacement link explicitly invalidates the old credential and starts a new seven-day lifetime. Cancellation, role protection, and blocked-address handling retain existing semantics.
+- Lost create/replacement responses offer status refresh or the identical retry. Retry neither rotates nor returns a new credential; if the original committed, show its current state and offer explicit replacement. Canceled, replaced, accepted, or expired results never expose a link as usable.
+- Record manual sharing distinctly from attempted email delivery without claiming the owner sent it or the recipient received it. Preserve existing delivery history; keep Mailpit available as an explicitly configured local email test mode.
+- Use the configured application origin. Delivery mode participates in retry consistency; changed parameters/configuration cannot reinterpret an earlier operation.
+- Recipients must prove the invited email through an available sign-in method and explicitly accept. Opening links, including scanner navigation, grants no membership. Google acceptance requires no mail service.
+- Automated tests cover owner/contributor/foreign-archive authorization, copy fallback, cleanup, reload/lost-response recovery, replacement/cancel/accept races, expiry, rate limits, and retained-token blocks. Existing email-mode tests continue to pass. Verify keyboard and narrow-screen usability locally.
+- Keep schema changes replayable through migrations and update the existing OpenSpec contracts and ignored verification report.
+
+## Assumptions / Decisions / Constraints
+
+- This ticket adds manual sharing to the current invitation model; it does not replace invitations with Supabase Auth invitations or add general-purpose share links.
+- The owner supplies the recipient's email even when sharing by text.
+- Hosted provider-free testers use matching Google accounts. Hosted email-code availability still requires separate email configuration.
+- Hosted deployment, first-owner provisioning, and release approval stay in 7.1. This ticket does not broaden the existing local-only setup script to target hosted resources.
+```
+
 ## 7. Integrated release verification
 
 - [ ] 7.1 Verify and release the agreed milestone with operator approval; pass local quality/build/security checks and hosted email-code/Google, identity-continuity, invitation, role-boundary, and retained-token blocking smoke tests, retaining evidence locally.
@@ -238,7 +284,7 @@ Let multiple owners invite family and block or restore contributors without usin
 **Status:** Not Started
 **Type:** Task
 **Priority:** Medium
-**Dependencies:** 1.1, 2.1, 3.1, 4.1, 5.1, 6.1
+**Dependencies:** 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2
 
 ## Summary
 
@@ -246,12 +292,13 @@ Validate the complete private-entry flow locally and on the intended hosted appl
 
 ## Done When
 
-- Use the confirmed target project `hbshdkyfzefwskokwiyf`; confirm the canonical origin, archive name, initial-owner email, Google credentials, and verified transactional sender with the operator. Do not make hosted changes before local verification and release approval.
+- Use the confirmed target project `hbshdkyfzefwskokwiyf`; confirm the canonical origin, archive name, initial-owner email, and Google configuration with the operator. Manual-link/Google testing may proceed without a provider after release approval and hosted safety checks. Confirm a verified transactional sender before enabling hosted email features. Do not make hosted changes before local verification and approval.
 - Refresh the legacy inventory and reset the disposable hosted application schema, old Auth accounts, and Storage files using supported interfaces while retaining the project. Apply the tested migrations and deploy Edge Functions; do not copy local test accounts or files.
 - Look up the correct project API URL and publishable key; no privileged key is present in frontend output.
 - Run `vp install` before implementation validation, then `vp check`, `vp test`, and `vp run build`, plus the new local database/function security tests.
 - Run security/performance/health advisors and resolve or explicitly report applicable findings.
 - Real local and hosted sign-in works with email codes and Google. Same-email continuity works in both provider orders without duplicate memberships.
+- For an earlier provider-free pilot, verify manually shared links and matching Google sign-in without any SMTP/Mailpit dependency. Record hosted email and cross-provider checks as outstanding, not passed; this pilot does not mark 7.1 complete.
 - Invite a second Owner and a Contributor; verify wrong-address denial, expiry/replacement/cancel, delivery recovery, independent owner operation, and sign-out/deep-link behavior.
 - Verify first-owner recovery for failed, lost, and expired invitations, plus harmless setup/recovery reruns after acceptance. Use isolated fixtures for destructive failure cases.
 - Use controlled failures to verify lost authentication and invitation responses, provider timeouts, and safe retries. Confirm current membership is rechecked and no duplicate admission or implicit resend occurs.
@@ -265,6 +312,6 @@ Validate the complete private-entry flow locally and on the intended hosted appl
 
 ## Workflow follow-up
 
-- Approved tickets are published and mapped above. Track implementation in GitHub and keep these task checkboxes aligned with verified completion.
+- Approved tickets, including 6.2, are published and mapped above. Track implementation in GitHub and keep these task checkboxes aligned with verified completion.
 - Begin implementation only after planning review and ticket publication; creating these artifacts is not implementation authorization.
 - Verify the completed change against its specs before archiving. Do not mark the broader archive-boundaries or upload milestones complete solely because these foundations exist.

@@ -18,7 +18,29 @@ Active owners SHALL have a simple invitation screen scoped to their archive. The
 #### Scenario: A contributor attempts to send an invitation
 
 - **WHEN** a contributor requests invitation creation directly or visits the owner screen
-- **THEN** the operation is denied without sending email or exposing the invitation list
+- **THEN** the operation is denied without issuing a link, sending email, or exposing the invitation list
+
+### Requirement: Manually shared invitation links
+
+Owners SHALL be able to create email-bound invitation links without an email provider and share them themselves. A newly issued link SHALL be shown only to its issuing owner in the current result panel, with a copy action and selectable text. Server storage SHALL retain only the credential digest. Status lists and routine logs SHALL NOT expose credentials.
+
+#### Scenario: An owner shares a new link
+
+- **WHEN** an owner selects Create invitation link for an email and role
+- **THEN** the application shows the new link for copying or manual selection
+- **AND** explains that no email was sent and the recipient must sign in with the invited address and explicitly accept
+
+#### Scenario: A relative receives a link by text
+
+- **WHEN** a relative opens the manually shared link and signs in with the matching Google address
+- **THEN** the existing explicit acceptance flow grants the stored archive role
+- **AND** creating, sharing, and accepting the link require no email-delivery provider
+
+#### Scenario: A displayed link is no longer available
+
+- **WHEN** the owner reloads, leaves access management, signs out, changes identity, or loses ownership
+- **THEN** the application clears its displayed link and does not retrieve the plaintext credential from status
+- **AND** a lost link can be recovered only through explicit replacement
 
 ### Requirement: Email-bound invitation acceptance
 
@@ -52,11 +74,11 @@ Invitations SHALL expire seven days after issuance. Expired invitations SHALL NO
 
 ### Requirement: Pending invitation management
 
-Owners SHALL see invitations for their archive with email, intended role, expiry, and actionable status. They SHALL be able to resend or cancel an unaccepted invitation. Resending SHALL issue a new seven-day invitation and invalidate the old one; cancellation SHALL prevent acceptance.
+Owners SHALL see invitations for their archive with email, intended role, expiry, and actionable status. They SHALL be able to replace or cancel an unaccepted invitation. Replacement SHALL issue a new seven-day invitation and invalidate the old one; cancellation SHALL prevent acceptance. In manual-sharing mode the action SHALL be labeled Create replacement link; optional email delivery may label it Resend invitation.
 
-#### Scenario: An owner resends an invitation
+#### Scenario: An owner replaces an invitation
 
-- **WHEN** an owner resends a pending or expired unaccepted invitation
+- **WHEN** an owner creates a replacement for a pending or expired unaccepted invitation
 - **THEN** a replacement is issued with a new seven-day lifetime
 - **AND** the previous invitation can no longer be accepted
 
@@ -76,7 +98,7 @@ Acceptance SHALL be single-use and safe under retries and concurrent owner actio
 
 #### Scenario: Cancellation and acceptance race
 
-- **WHEN** cancellation or resend completes before acceptance commits
+- **WHEN** cancellation or replacement completes before acceptance commits
 - **THEN** acceptance of the invalidated invitation creates no membership
 
 #### Scenario: A caller attempts to change the invited role
@@ -86,11 +108,17 @@ Acceptance SHALL be single-use and safe under retries and concurrent owner actio
 
 ### Requirement: Honest delivery feedback
 
-Invitation operations SHALL distinguish a saved invitation from email delivery failure and SHALL offer an owner an appropriate retry. Secrets and acceptance credentials SHALL NOT be shown in invitation lists or logged as routine application data.
+Invitation operations SHALL distinguish manual sharing from attempted email delivery. Manual creation SHALL report that no email was sent, not rejected or unknown delivery. When email delivery is enabled, saved invitations SHALL be distinguished from delivery failure and offer recovery. Credentials SHALL NOT appear in status lists or routine logs; only the initial authorized issuance result may reveal the new link.
+
+#### Scenario: An owner reviews a manually shared invitation
+
+- **WHEN** an owner refreshes the invitation list after manual creation
+- **THEN** its status identifies manual sharing without claiming the link was shared, delivered, or received
+- **AND** no plaintext link is returned
 
 #### Scenario: Invitation email cannot be sent
 
-- **WHEN** invitation creation succeeds but its email provider rejects delivery
+- **WHEN** email delivery is enabled and invitation creation succeeds but its provider rejects delivery
 - **THEN** the owner sees a persistent delivery-failure state and resend action
 - **AND** the application does not claim the email was delivered
 
@@ -112,6 +140,13 @@ Invitation failures SHALL provide persistent feedback and recovery actions. Serv
 
 #### Scenario: An owner operation has an unknown outcome
 
-- **WHEN** an invitation send, resend, or cancel request loses its response
+- **WHEN** an invitation create, replacement, or cancel request loses its response
 - **THEN** the interface explains that the result could not be confirmed and offers a status refresh or safe retry
 - **AND** recovery does not silently issue additional invitations or restore an invalidated credential
+
+#### Scenario: Manual creation commits but its link response is lost
+
+- **WHEN** the owner retries the same creation operation after its committed response was lost
+- **THEN** retry confirms the current invitation status without generating or revealing another credential
+- **AND** the owner is told that the original link cannot be retrieved and may explicitly create a replacement
+- **AND** a retry after cancellation, replacement, acceptance, or expiry never presents a stale link as usable

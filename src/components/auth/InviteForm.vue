@@ -3,7 +3,7 @@ import { shallowRef } from 'vue'
 import UiInput from '../ui/UiInput.vue'
 import UiSelect from '../ui/UiSelect.vue'
 import UiButton from '../ui/UiButton.vue'
-defineProps<{ disabled: boolean }>()
+defineProps<{ disabled: boolean; deliveryMode: 'manual' | 'email' }>()
 const emit = defineEmits<{ invite: [email: string, role: 'owner' | 'contributor'] }>()
 const email = shallowRef('')
 const role = shallowRef('contributor')
@@ -38,8 +38,8 @@ function submit() {
         contributor access.</span
       >
     </label>
-    <UiButton type="submit" :disabled="disabled || (role === 'owner' && !confirmed)"
-      >Send invitation</UiButton
-    >
+    <UiButton type="submit" :disabled="disabled || (role === 'owner' && !confirmed)">{{
+      deliveryMode === 'manual' ? 'Create invitation link' : 'Send invitation'
+    }}</UiButton>
   </form>
 </template>

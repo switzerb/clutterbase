@@ -10,7 +10,8 @@ Relatives need a simple, invitation-only way to enter their private family archi
 - Create one archive and its initial owner through secure setup, not public registration or an archive-creation screen.
 - Associate Owner or Contributor roles with individual archive memberships, not accounts globally. Multiple owners may share an archive; the model permits memberships in other archives later.
 - Let owners invite an email address as Contributor by default or explicitly as Owner, with a clear privilege warning. Either sign-in method must prove the invited email.
-- Provide a simple owner-only invitation screen with pending invitations, resend, and cancel. Invitations expire after seven days; resend replaces the previous invitation.
+- Provide a simple owner-only invitation screen with Create invitation link, copy, replacement, and cancel. Owners share links themselves by text or email; no email provider is needed for this method. Invitations expire after seven days; replacement invalidates the previous invitation.
+- Show a newly created link only in the issuing owner's current result panel. Lost links are replaced rather than retrieved. For hosted testing without an email provider, recipients use their matching Google accounts. Email-code support and local Mailpit testing remain available; production email delivery can follow later.
 - Let owners block and unblock contributors in their archive. Blocking denies subsequent reads and writes even for existing sessions, preserves contributions, and cannot be bypassed by another invitation. Unblocking restores membership without another invitation.
 - Keep owner blocking/removal, role changes, archive creation, archive switching, and broader membership administration out of scope.
 - Continue to label synthetic browsing, uploads, and edits as demonstrations. This milestone does not deliver real archive files, catalog persistence, upload, or review workflows.
@@ -22,7 +23,7 @@ Relatives need a simple, invitation-only way to enter their private family archi
 
 - `user-authentication`: Email-code and Google sign-in, identity continuity, session handling, and understandable authentication outcomes.
 - `archive-access`: Archive-scoped roles, secure initial ownership, membership enforcement, contributor blocking, and restoration.
-- `archive-invitations`: Owner-only, email-bound invitations, acceptance, expiry, resend, and cancellation.
+- `archive-invitations`: Owner-only, email-bound shareable links, acceptance, expiry, replacement, and cancellation; optional email delivery.
 
 ### Modified Capabilities
 
@@ -36,5 +37,5 @@ Relatives need a simple, invitation-only way to enter their private family archi
 
 ## Research Questions
 
-- Confirm the production Supabase project, site URL, Google OAuth credentials, production email delivery, and initial owner's verified email during implementation setup; do not commit secrets or infer these values.
+- Confirm the production Supabase project, site URL, Google OAuth credentials, and initial owner's verified email during implementation setup; do not commit secrets or infer these values. Configure production email delivery before enabling hosted email-code or emailed-invitation testing, not as a prerequisite for manually shared links with Google.
 - Verify invitation-only admission and same-email identity linking against current Supabase behavior before implementation. A valid authentication session alone must never establish archive access.

@@ -23,6 +23,7 @@ const invitation: Invitation = {
   expiresAt: '2030-01-01T00:00:00Z',
   status: 'pending',
   delivery: 'unknown',
+  deliveryMode: 'email',
 }
 const members: Member[] = [
   { user_id: 'owner', admission_email: 'owner@example.test', role: 'owner', blocked: false },
@@ -42,7 +43,7 @@ beforeEach(() => {
   })
   vi.mocked(accessGateway.list)
     .mockReset()
-    .mockResolvedValue({ invitations: [invitation], members })
+    .mockResolvedValue({ invitations: [invitation], members, deliveryMode: 'email' })
   vi.mocked(accessGateway.invite).mockReset().mockResolvedValue({ invitation })
   vi.mocked(accessGateway.block).mockReset().mockResolvedValue({ outcome: 'confirmed' })
 })
@@ -70,6 +71,80 @@ async function send() {
   await flushPromises()
 }
 describe('owner access controls', () => {
+  const manual: Invitation = {
+    ...invitation,
+    deliveryMode: 'manual',
+    delivery: 'not_requested',
+    expiresAt: new Date(Date.now() + 86400000).toISOString(),
+  }
+  const link = 'http://localhost:5173/invitation#token=one-time-secret'
+  function manualMode() {
+    vi.mocked(accessGateway.list).mockResolvedValue({
+      invitations: [manual],
+      members,
+      deliveryMode: 'manual',
+    })
+    vi.mocked(accessGateway.invite).mockResolvedValue({ invitation: manual, link })
+  }
+  it.each([true, false])(
+    'copies a manual link with selectable fallback (clipboard success: %s)',
+    async (success) => {
+      manualMode()
+      const writeText = vi
+        .fn<(text: string) => Promise<void>>()
+        .mockImplementation(() =>
+          success ? Promise.resolve() : Promise.reject(new Error('denied')),
+        )
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+      await open()
+      expect(wrapper!.text()).toContain('Create invitation link')
+      expect(wrapper!.text()).toContain('Create replacement link')
+      await send()
+      expect(wrapper!.get<HTMLInputElement>('input[readonly]').element.value).toBe(link)
+      await click('Copy invitation link')
+      expect(writeText).toHaveBeenCalledWith(link)
+      expect(wrapper!.text()).toContain(success ? 'Link copied' : 'Select and copy')
+      expect(accessGateway.invite).toHaveBeenCalledTimes(1)
+      expect(localStorage.length).toBe(0)
+      expect(sessionStorage.length).toBe(0)
+    },
+  )
+  it('clears a link after leaving and does not retrieve it on return', async () => {
+    manualMode()
+    const router = await open()
+    await send()
+    await router.push('/')
+    await flushPromises()
+    await router.push('/access')
+    await flushPromises()
+    expect(wrapper!.find('input[readonly]').exists()).toBe(false)
+    expect(accessGateway.invite).toHaveBeenCalledTimes(1)
+  })
+  it('removes a link when refresh discovers cancellation', async () => {
+    manualMode()
+    await open()
+    await send()
+    vi.mocked(accessGateway.list).mockResolvedValue({
+      invitations: [{ ...manual, status: 'canceled' }],
+      members,
+      deliveryMode: 'manual',
+    })
+    await click('Refresh status')
+    expect(wrapper!.find('input[readonly]').exists()).toBe(false)
+  })
+  it('reconciles a lost manual response without recovering or rotating the credential', async () => {
+    manualMode()
+    vi.mocked(accessGateway.invite)
+      .mockRejectedValueOnce(new OperationError('unconfirmed'))
+      .mockResolvedValue({ invitation: manual })
+    await open()
+    await send()
+    const original = vi.mocked(accessGateway.invite).mock.calls[0]![0]
+    await click('Retry same operation')
+    expect(accessGateway.invite).toHaveBeenNthCalledWith(2, original)
+    expect(wrapper!.text()).toContain('original link cannot be retrieved')
+    expect(wrapper!.find('input[readonly]').exists()).toBe(false)
+  })
   it('defaults to Contributor and requires acknowledgement for Owner', async () => {
     await open()
     expect(wrapper!.get('select').element.value).toBe('contributor')
@@ -123,6 +198,7 @@ describe('owner access controls', () => {
     expect(ownerRow.find('button').exists()).toBe(false)
     vi.mocked(accessGateway.list).mockResolvedValue({
       invitations: [],
+      deliveryMode: 'email',
       members: members.map((member) => ({ ...member, blocked: member.role === 'contributor' })),
     })
     await click('Block contributor')

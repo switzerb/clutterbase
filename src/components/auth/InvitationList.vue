@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { Invitation } from '../../services/access-management'
 import UiButton from '../ui/UiButton.vue'
-defineProps<{ invitations: Invitation[]; disabled: boolean }>()
+defineProps<{ invitations: Invitation[]; disabled: boolean; deliveryMode: 'manual' | 'email' }>()
 defineEmits<{ resend: [invitation: Invitation]; cancel: [invitation: Invitation] }>()
 const delivery = {
+  not_requested: 'Manual sharing · No email was sent. Sharing and receipt are not tracked.',
   accepted: 'Email provider accepted the message; inbox delivery is not confirmed.',
   rejected: 'Email delivery was rejected. Resend to issue a new invitation.',
   unknown: 'Email delivery is unknown. Refresh status or explicitly resend a new invitation.',
@@ -31,9 +32,9 @@ const delivery = {
         <p>Expires {{ new Date(invitation.expiresAt).toLocaleString() }}</p>
         <p>{{ delivery[invitation.delivery] }}</p>
         <div v-if="invitation.status === 'pending'" class="mt-3 flex flex-wrap gap-3">
-          <UiButton variant="secondary" :disabled="disabled" @click="$emit('resend', invitation)"
-            >Resend invitation</UiButton
-          >
+          <UiButton variant="secondary" :disabled="disabled" @click="$emit('resend', invitation)">{{
+            deliveryMode === 'manual' ? 'Create replacement link' : 'Resend invitation'
+          }}</UiButton>
           <UiButton variant="secondary" :disabled="disabled" @click="$emit('cancel', invitation)"
             >Cancel invitation</UiButton
           >
