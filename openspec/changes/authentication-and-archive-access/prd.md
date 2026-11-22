@@ -14,6 +14,7 @@ Relatives need a simple, invitation-only way to enter their private family archi
 - Let owners block and unblock contributors in their archive. Blocking denies subsequent reads and writes even for existing sessions, preserves contributions, and cannot be bypassed by another invitation. Unblocking restores membership without another invitation.
 - Keep owner blocking/removal, role changes, archive creation, archive switching, and broader membership administration out of scope.
 - Continue to label synthetic browsing, uploads, and edits as demonstrations. This milestone does not deliver real archive files, catalog persistence, upload, or review workflows.
+- Authentication and invitation failures provide persistent, understandable feedback and a clear recovery action. Retrying must not duplicate memberships or broaden access. Trusted setup supports recovery of an undelivered, lost, or expired initial-owner invitation.
 
 ## Capabilities
 

@@ -1,12 +1,38 @@
 <script setup lang="ts">
-import { computed, nextTick, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AppHeader from './components/layout/AppHeader.vue'
 import { mockItemId } from './router/mock-items'
 import { displayTitle, findArchiveItem } from './data/archive'
 import { appPinia, useCollectionContext } from './stores/collection-context'
+import { useSession } from './stores/session'
 
 const route = useRoute()
+const router = useRouter()
+const session = useSession(appPinia)
+watch(
+  () => session.status,
+  (status) => {
+    if (route.meta.public || !route.matched.length) return
+    if (status === 'signed-out') void router.replace('/login')
+    else if (status === 'no-access' || status === 'error') void router.replace('/no-access')
+    else if (status === 'admitted' && route.meta.owner && !session.owner)
+      void router.replace('/no-access')
+  },
+)
+function resume() {
+  if (document.visibilityState !== 'hidden' && !route.meta.public) void session.refresh()
+}
+onMounted(() => {
+  window.addEventListener('focus', resume)
+  window.addEventListener('pageshow', resume)
+  document.addEventListener('visibilitychange', resume)
+})
+onUnmounted(() => {
+  window.removeEventListener('focus', resume)
+  window.removeEventListener('pageshow', resume)
+  document.removeEventListener('visibilitychange', resume)
+})
 let initialized = false
 const pageTitle = computed(() => {
   const item = route.name === 'item' ? findArchiveItem(route.params.id) : undefined
@@ -46,7 +72,13 @@ watch(
     >
     <AppHeader />
     <main id="main" tabindex="-1" class="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8">
-      <RouterView />
+      <div
+        v-if="route.meta.public || session.archive"
+        v-show="route.meta.public || session.admitted"
+      >
+        <RouterView :key="route.meta.public ? 'public' : session.revision" />
+      </div>
+      <p v-if="!route.meta.public && !session.admitted" role="status">Checking archive access…</p>
     </main>
   </div>
 </template>

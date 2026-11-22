@@ -22,12 +22,17 @@ Active owners SHALL have a simple invitation screen scoped to their archive. The
 
 ### Requirement: Email-bound invitation acceptance
 
-Acceptance SHALL require a valid invitation and authentication proving its email address through email code or Google. Successful acceptance SHALL establish exactly one membership with the invitation's archive and role. A forwarded invitation alone SHALL NOT grant access.
+Acceptance SHALL require a valid invitation, authentication proving its email address through email code or Google, and an explicit authenticated Accept invitation action. Opening a link or completing sign-in SHALL NOT consume the invitation or establish membership. Successful acceptance SHALL establish exactly one membership with the invitation's archive and role. A forwarded invitation alone SHALL NOT grant access.
 
 #### Scenario: A matching relative accepts
 
-- **WHEN** a relative opens a valid invitation and authenticates its email using either supported method
+- **WHEN** a relative opens a valid invitation, authenticates its email using either supported method, and explicitly selects Accept invitation
 - **THEN** acceptance establishes their membership and opens the archive
+
+#### Scenario: A link is opened without acceptance
+
+- **WHEN** a person or email scanner opens an invitation link, or a relative completes sign-in without selecting Accept invitation
+- **THEN** the invitation remains unconsumed and no membership is created
 
 #### Scenario: A forwarded invitation reaches a different account
 
@@ -88,3 +93,25 @@ Invitation operations SHALL distinguish a saved invitation from email delivery f
 - **WHEN** invitation creation succeeds but its email provider rejects delivery
 - **THEN** the owner sees a persistent delivery-failure state and resend action
 - **AND** the application does not claim the email was delivered
+
+### Requirement: Recoverable invitation errors and unknown outcomes
+
+Invitation failures SHALL provide persistent feedback and recovery actions. Service failures SHALL be distinct from invalid invitations; unknown outcomes SHALL NOT be reported as definite success or failure. Retries SHALL reconcile current state without duplicate memberships, role changes, or block overrides.
+
+#### Scenario: A recipient needs a recovery action
+
+- **WHEN** acceptance fails because the account is wrong or the invitation is expired, canceled, or replaced
+- **THEN** wrong-account feedback offers account switching
+- **AND** expired, canceled, or replaced invitation feedback directs the recipient to request a current invitation
+
+#### Scenario: Acceptance succeeds but its response is lost
+
+- **WHEN** acceptance commits but the recipient does not receive its response
+- **THEN** the application offers a safe retry to confirm the result
+- **AND** retry creates no duplicate membership and rechecks current access before opening the archive
+
+#### Scenario: An owner operation has an unknown outcome
+
+- **WHEN** an invitation send, resend, or cancel request loses its response
+- **THEN** the interface explains that the result could not be confirmed and offers a status refresh or safe retry
+- **AND** recovery does not silently issue additional invitations or restore an invalidated credential

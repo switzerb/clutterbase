@@ -32,6 +32,23 @@ Launch SHALL provide one archive and an initial Owner through trusted setup boun
 - **THEN** that account can sign in and invite additional owners or contributors
 - **AND** repeating setup does not create duplicate archives or memberships
 
+### Requirement: Initial-owner invitation recovery
+
+Trusted operator setup SHALL support replacing an undelivered, lost, or expired initial-owner invitation before initial ownership is established. Recovery SHALL retain the configured archive and operator-approved recipient, invalidate the previous credential, and issue a new seven-day invitation. It SHALL require normal verified, explicit acceptance and SHALL NOT be callable by public clients.
+
+#### Scenario: The initial-owner invitation cannot be used
+
+- **WHEN** the operator requests recovery of an undelivered, lost, or expired initial-owner invitation before acceptance
+- **THEN** a replacement invitation is issued for the same archive and approved email
+- **AND** the previous credential cannot establish membership
+- **AND** delivery failure remains visible and recoverable
+
+#### Scenario: Setup or recovery is repeated after acceptance
+
+- **WHEN** the operator reruns setup or recovery after initial ownership has been established
+- **THEN** no additional bootstrap invitation, archive, or membership is created
+- **AND** existing roles and blocks remain unchanged
+
 ### Requirement: Contributor and owner permissions
 
 Active owners and contributors SHALL have equal archive-content access for browsing, uploading, tagging, editing, and reviewing as those features become available. Only active owners SHALL manage invitations and contributor blocks. Contributor accounts SHALL NOT elevate their own privileges.

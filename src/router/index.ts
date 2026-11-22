@@ -7,6 +7,14 @@ import FamilyView from '../views/FamilyView.vue'
 import UploadView from '../views/UploadView.vue'
 import { nextTick } from 'vue'
 import { appPinia, useCollectionContext } from '../stores/collection-context'
+import { useSession } from '../stores/session'
+import LoginView from '../views/LoginView.vue'
+import NoAccessView from '../views/NoAccessView.vue'
+import AuthCallbackView from '../views/AuthCallbackView.vue'
+import { safeDestination } from './return-destination'
+import InvitationView from '../views/InvitationView.vue'
+import AccessView from '../views/AccessView.vue'
+import { captureInvitationCredential } from '../services/invitation-credential'
 
 export function createAppRouter(
   history: RouterHistory = createWebHistory(import.meta.env.BASE_URL),
@@ -37,6 +45,23 @@ export function createAppRouter(
       return savedPosition || { left: 0, top: 0 }
     },
     routes: [
+      { path: '/access', component: AccessView, meta: { title: 'Manage access', owner: true } },
+      {
+        path: '/invitation',
+        component: InvitationView,
+        meta: { title: 'Archive invitation', public: true },
+      },
+      { path: '/login', component: LoginView, meta: { title: 'Sign in', public: true } },
+      {
+        path: '/no-access',
+        component: NoAccessView,
+        meta: { title: 'Archive access', public: true },
+      },
+      {
+        path: '/auth/callback',
+        component: AuthCallbackView,
+        meta: { title: 'Finishing sign-in', public: true },
+      },
       { path: '/', component: ArchiveView, meta: { title: 'Archive', destination: 'archive' } },
       {
         path: '/inbox',
@@ -56,6 +81,23 @@ export function createAppRouter(
       { path: '/archive/:id', name: 'item', component: ItemView, meta: { destination: 'archive' } },
       { path: '/:pathMatch(.*)*', component: NotFoundView },
     ],
+  })
+  router.beforeEach(async (to) => {
+    if (to.path === '/invitation' && to.hash) {
+      captureInvitationCredential(to.hash)
+      window.history.replaceState(window.history.state, '', '/invitation')
+      return { path: '/invitation', replace: true }
+    }
+    const session = useSession(appPinia)
+    if (to.meta.public) {
+      if (session.status === 'initializing' && to.path !== '/auth/callback') await session.refresh()
+      return
+    }
+    await session.refresh()
+    if (session.status === 'signed-out')
+      return { path: '/login', query: { returnTo: safeDestination(to.fullPath) } }
+    if (!session.admitted) return '/no-access'
+    if (to.meta.owner && !session.owner) return '/no-access'
   })
   router.beforeEach((to, from) => {
     context.returning =

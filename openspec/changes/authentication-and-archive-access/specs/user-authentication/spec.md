@@ -78,10 +78,36 @@ The application SHALL restore valid sessions on reload, support sign-out, and de
 
 ### Requirement: Private and accessible authentication feedback
 
-Sign-in screens SHALL provide labeled, keyboard-operable controls, visible focus, and persistent status feedback. Unauthenticated code requests SHALL NOT disclose whether an email has membership or an invitation.
+Sign-in screens SHALL provide labeled, keyboard-operable controls, visible focus, and persistent status feedback. The application's unauthenticated code-request feedback SHALL NOT disclose whether an email has membership or an invitation. This feedback guarantee SHALL NOT be represented as preventing eligibility disclosure through direct requests to Supabase's public Auth API.
 
 #### Scenario: An unknown email requests a code
 
 - **WHEN** an unauthenticated visitor requests a code for an uninvited address
-- **THEN** the response does not disclose archive membership or invitation status
+- **THEN** the application's feedback does not disclose archive membership or invitation status
 - **AND** the request does not grant archive access
+
+### Requirement: Invitation-only account creation
+
+New email-code and Google accounts SHALL require an unexpired pending invitation. This rule SHALL be enforced by the authentication service, including requests made outside the application. Creating an account SHALL NOT accept an invitation or grant archive membership.
+
+#### Scenario: An uninvited visitor attempts account creation
+
+- **WHEN** a visitor without an unexpired pending invitation attempts to create an account through either supported method, including directly through Auth
+- **THEN** account creation is rejected
+- **AND** no archive membership is created
+
+#### Scenario: An invitation becomes invalid after account creation
+
+- **WHEN** an invitation expires or is canceled after account creation but before acceptance
+- **THEN** acceptance is denied
+- **AND** the authentication session alone grants no archive access
+
+### Requirement: Recoverable authentication errors
+
+Authentication failures SHALL provide persistent, understandable feedback and an appropriate next action. Network or service failures SHALL NOT be presented as proof of an invalid code or missing membership. Unknown outcomes SHALL NOT be reported as successful authentication; retry SHALL reconcile session state and recheck current access before rendering protected content.
+
+#### Scenario: Authentication is interrupted
+
+- **WHEN** a network or service failure prevents the application from determining the sign-in result
+- **THEN** it explains that sign-in could not be confirmed and offers retry
+- **AND** retry checks session state and current membership without assuming access
