@@ -20,6 +20,9 @@ vi.mock('../services/auth', () => ({
   },
 }))
 beforeEach(async () => {
+  // Test both providers independently of the deployment's Google-only build setting.
+  // Individual tests can explicitly disable email to exercise that configuration.
+  vi.stubEnv('VITE_EMAIL_SIGN_IN_ENABLED', 'true')
   vi.mocked(authGateway.identity)
     .mockReset()
     .mockResolvedValue({ id: 'test-member', email: 'member@example.test' })
