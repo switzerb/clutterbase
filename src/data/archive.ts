@@ -73,5 +73,10 @@ const fixtures: ArchiveItem[] = [
 export const archiveItems = reactive<ArchiveItem[]>(structuredClone(fixtures))
 export const demoSavedItems = reactive(new Set<string>())
 
+export function resetDemoArchive() {
+  archiveItems.splice(0, archiveItems.length, ...structuredClone(fixtures))
+  demoSavedItems.clear()
+}
+
 export const displayTitle = (item: ArchiveItem) => item.title || item.filename
 export const findArchiveItem = (id: unknown) => archiveItems.find((item) => item.id === id)

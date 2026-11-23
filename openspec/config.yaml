@@ -17,6 +17,7 @@ rules:
   implementation:
     - Each task will be represented by a single ticket, focus on clear boundaries
     - When a task can be handled in parallel with other tasks, indicate that
+skillsScope: project
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.
