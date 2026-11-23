@@ -100,6 +100,49 @@ describe('explicit invitation acceptance', () => {
     expect(wrapper!.text()).toContain('Accept invitation')
     expect(invitationGateway.accept).not.toHaveBeenCalled()
   })
+  it('preserves explicit acceptance when canceled Google sign-in falls back to email', async () => {
+    vi.mocked(authGateway.identity).mockResolvedValue(null)
+    vi.mocked(authGateway.access).mockResolvedValue(null)
+    await useSession(appPinia).reconcile()
+    const router = await open()
+    await click('Continue with Google')
+    await router.push('/auth/callback?error=access_denied')
+    await flushPromises()
+    await wrapper!
+      .findAll('a')
+      .find((link) => link.text() === 'Use email sign-in')!
+      .trigger('click')
+    await flushPromises()
+    await wrapper!.get('input[type=email]').setValue('invited@example.test')
+    await wrapper!.get('form').trigger('submit')
+    await flushPromises()
+    vi.mocked(authGateway.identity).mockResolvedValue({
+      id: 'test-member',
+      email: 'invited@example.test',
+    })
+    await wrapper!.get('input[autocomplete=one-time-code]').setValue('123456')
+    await wrapper!.findAll('form')[1]!.trigger('submit')
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/invitation')
+    expect(invitationCredential()).toBe(token)
+    expect(wrapper!.text()).toContain('Accept invitation')
+    expect(invitationGateway.accept).not.toHaveBeenCalled()
+    expect(useSession(appPinia).admitted).toBe(false)
+
+    vi.mocked(invitationGateway.accept).mockResolvedValue({
+      outcome: 'accepted',
+      archiveId: 'test-archive',
+    })
+    vi.mocked(authGateway.access).mockResolvedValue({
+      id: 'test-archive',
+      name: 'Test archive',
+      role: 'contributor',
+    })
+    await click('Accept invitation')
+    expect(invitationGateway.accept).toHaveBeenCalledExactlyOnceWith(token)
+    expect(router.currentRoute.value.path).toBe('/')
+    expect(invitationCredential()).toBeNull()
+  })
   it.each([
     'expired',
     'canceled',

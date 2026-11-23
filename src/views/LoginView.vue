@@ -11,7 +11,9 @@ const session = useSession(appPinia)
 const destination = safeDestination(route.query.returnTo)
 saveDestination(destination)
 async function authenticated() {
-  await router.replace(session.admitted ? destination : '/no-access')
+  await router.replace(
+    destination === '/invitation' ? destination : session.admitted ? destination : '/no-access',
+  )
 }
 </script>
 <template>

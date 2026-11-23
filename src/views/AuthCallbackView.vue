@@ -51,7 +51,9 @@ onMounted(() => {
     <p role="status" class="mt-4">{{ message }}</p>
     <div v-if="failed" class="mt-6 flex flex-wrap gap-3">
       <UiButton @click="finish(true)">Retry sign-in check</UiButton>
-      <RouterLink to="/login" class="self-center text-accent underline"
+      <RouterLink
+        :to="{ path: '/login', query: { returnTo: readDestination() } }"
+        class="self-center text-accent underline"
         >Use email sign-in</RouterLink
       >
     </div>
