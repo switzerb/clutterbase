@@ -293,7 +293,7 @@ Validate the complete private-entry flow locally and on the intended hosted appl
 ## Done When
 
 - Use the confirmed target project `hbshdkyfzefwskokwiyf`; confirm the canonical origin, archive name, initial-owner email, and Google configuration with the operator. Manual-link/Google testing may proceed without a provider after release approval and hosted safety checks. Confirm a verified transactional sender before enabling hosted email features. Do not make hosted changes before local verification and approval.
-- Refresh the legacy inventory and reset the disposable hosted application schema, old Auth accounts, and Storage files using supported interfaces while retaining the project. Apply the tested migrations and deploy Edge Functions; do not copy local test accounts or files.
+- Refresh the legacy inventory and preserve existing application tables, Auth accounts, and Storage files during the additive hosted rollout. Apply the tested migrations and deploy Edge Functions; do not copy local test accounts or files. Any later legacy cleanup needs separate operator approval.
 - Look up the correct project API URL and publishable key; no privileged key is present in frontend output.
 - Run `vp install` before implementation validation, then `vp check`, `vp test`, and `vp run build`, plus the new local database/function security tests.
 - Run security/performance/health advisors and resolve or explicitly report applicable findings.
@@ -311,6 +311,16 @@ Validate the complete private-entry flow locally and on the intended hosted appl
 ```
 
 ## Workflow follow-up
+
+### Hosted Google-only pilot (2026-11-23)
+
+- Operator confirmed `https://clutterbase.ing/`, archive **Harris / Gibbs**, and initial Owner `brenna.switzer@gmail.com`. Custom SMTP is deferred; use Google and manually shared invitations for the pilot.
+- The hosted inventory contains two legacy Auth users and eighteen Storage objects. Preserve these and the legacy schema during this additive rollout; no reset or deletion was performed.
+- Applied the four archive migrations, deployed the three Edge Functions, enabled the invitation-only Auth hook, and updated the site/callback URLs. Existing Google OAuth credentials were retained.
+- Created a pending manual Owner invitation. Its plaintext credential is retained only in an ignored, owner-readable local artifact; no invitation credential belongs in OpenSpec or GitHub.
+- Disable hosted email authentication until SMTP is configured. Set `VITE_EMAIL_SIGN_IN_ENABLED=false` in the production build to hide code entry and email fallback; local development defaults to email enabled. Re-enabling requires matching six-digit/600-second OTP settings and code email templates as well as SMTP.
+- Production build inputs are `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_ARCHIVE_ID`, and `VITE_EMAIL_SIGN_IN_ENABLED`. Workers Builds configuration requires operator action because the available Cloudflare credentials lack the necessary permission.
+- Hosted endpoint smoke checks pass for unauthenticated denial and invalid requests; direct uninvited Auth account creation was denied by the hook. Actual Google sign-in, explicit Owner acceptance, further role/invitation checks, and email/cross-provider verification remain outstanding. Task 7.1 remains incomplete.
 
 - Approved tickets, including 6.2, are published and mapped above. Track implementation in GitHub and keep these task checkboxes aligned with verified completion.
 - Begin implementation only after planning review and ticket publication; creating these artifacts is not implementation authorization.

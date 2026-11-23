@@ -3,12 +3,14 @@ import { computed, onUnmounted, shallowRef } from 'vue'
 import UiInput from '../ui/UiInput.vue'
 import UiButton from '../ui/UiButton.vue'
 import { authGateway } from '../../services/auth'
+import { emailSignInEnabled } from '../../services/auth-options'
 import { OperationError } from '../../services/supabase'
 import { useSession } from '../../stores/session'
 import { appPinia } from '../../stores/collection-context'
 
 const emit = defineEmits<{ authenticated: [] }>()
 const session = useSession(appPinia)
+const emailEnabled = emailSignInEnabled()
 const email = shallowRef('')
 const code = shallowRef('')
 const sentTo = shallowRef('')
@@ -34,7 +36,9 @@ function explain(error: unknown) {
       : outcome === 'rate_limited'
         ? 'Please wait before trying again.'
         : outcome === 'google_failed'
-          ? 'Google sign-in did not finish. Try again or use an email code.'
+          ? emailEnabled
+            ? 'Google sign-in did not finish. Try again or use an email code.'
+            : 'Google sign-in did not finish. Try again.'
           : 'Sign-in could not be confirmed. Check your connection, then retry.'
   if (error instanceof OperationError && error.retryAfter) {
     message.value += ` Retry after ${error.retryAfter}.`
@@ -104,7 +108,7 @@ async function google() {
 
 <template>
   <div class="grid gap-5">
-    <form class="grid gap-4" @submit.prevent="requestCode">
+    <form v-if="emailEnabled" class="grid gap-4" @submit.prevent="requestCode">
       <UiInput
         v-model="email"
         label="Email address"

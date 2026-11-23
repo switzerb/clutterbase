@@ -6,10 +6,12 @@ import { readDestination } from '../router/return-destination'
 import { useSession } from '../stores/session'
 import { appPinia } from '../stores/collection-context'
 import UiButton from '../components/ui/UiButton.vue'
+import { emailSignInEnabled } from '../services/auth-options'
 
 const route = useRoute()
 const router = useRouter()
 const session = useSession(appPinia)
+const emailEnabled = emailSignInEnabled()
 const message = shallowRef('Finishing sign-in…')
 const failed = shallowRef(false)
 let active = true
@@ -36,8 +38,9 @@ async function finish(retry = false) {
   } catch {
     if (active) {
       failed.value = true
-      message.value =
-        'Google sign-in could not be confirmed. Retry the session check or use email sign-in.'
+      message.value = emailEnabled
+        ? 'Google sign-in could not be confirmed. Retry the session check or use email sign-in.'
+        : 'Google sign-in could not be confirmed. Retry the session check or return to sign in with Google again.'
     }
   }
 }
@@ -54,7 +57,7 @@ onMounted(() => {
       <RouterLink
         :to="{ path: '/login', query: { returnTo: readDestination() } }"
         class="self-center text-accent underline"
-        >Use email sign-in</RouterLink
+        >{{ emailEnabled ? 'Use email sign-in' : 'Return to sign in' }}</RouterLink
       >
     </div>
   </section>

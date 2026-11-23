@@ -15,6 +15,7 @@ afterEach(() => {
   wrapper?.unmount()
   wrapper = undefined
   sessionStorage.clear()
+  vi.unstubAllEnvs()
 })
 async function open(path: string) {
   const router = createAppRouter(createMemoryHistory())
@@ -136,6 +137,29 @@ describe('private navigation and sessions', () => {
 })
 
 describe('sign-in experience', () => {
+  it('offers Google-only sign-in and recovery when hosted email is disabled', async () => {
+    vi.stubEnv('VITE_EMAIL_SIGN_IN_ENABLED', 'false')
+    await signedOut()
+    const router = await open('/login?returnTo=/family')
+    expect(wrapper!.find('input[type=email]').exists()).toBe(false)
+    expect(wrapper!.text()).toContain('Continue with Google using the email address')
+    await wrapper!
+      .findAll('button')
+      .find((button) => button.text() === 'Continue with Google')!
+      .trigger('click')
+    expect(authGateway.google).toHaveBeenCalledOnce()
+    await router.push('/auth/callback?error=access_denied')
+    await flushPromises()
+    expect(wrapper!.text()).not.toContain('Use email sign-in')
+    await wrapper!
+      .findAll('a')
+      .find((link) => link.text() === 'Return to sign in')!
+      .trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.query.returnTo).toBe('/family')
+    expect(wrapper!.find('input[type=email]').exists()).toBe(false)
+    expect(authGateway.requestCode).not.toHaveBeenCalled()
+  })
   it('requests and verifies a code and restores the deep link', async () => {
     await signedOut()
     const router = await open('/login?returnTo=/archive/summer-letter')
